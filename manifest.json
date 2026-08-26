@@ -1,0 +1,18 @@
+{
+  "name": "ระบบจัดการออเดอร์ร้านคาเฟ่",
+  "short_name": "ออเดอร์คาเฟ่",
+  "description": "ระบบจัดการออเดอร์ ควบคุมจำนวนสินค้าต่อวัน ออกใบเสร็จ และสรุปยอดขาย",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f7f3ee",
+  "theme_color": "#6f4e37",
+  "lang": "th",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
