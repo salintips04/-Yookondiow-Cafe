@@ -199,8 +199,15 @@
     </div>
     <div class="card">
       <h2>ข้อมูล</h2>
-      <p style="font-size:13px;color:var(--sub);">ข้อมูลทั้งหมดถูกเก็บไว้ในเบราว์เซอร์นี้เท่านั้น (localStorage) ไม่มีการส่งข้อมูลออกอินเทอร์เน็ต</p>
-      <button class="btn danger" id="resetAllBtn">ล้างข้อมูลทั้งหมด</button>
+      <p style="font-size:13px;color:var(--sub);">ข้อมูลทั้งหมดถูกเก็บไว้ในเบราว์เซอร์นี้เท่านั้น (localStorage) ไม่มีการส่งข้อมูลออกอินเทอร์เน็ต หากล้างแคช/ข้อมูลเว็บไซต์ของเบราว์เซอร์ ข้อมูลจะหายถาวร <b>แนะนำให้กด "ดาวน์โหลดข้อมูลสำรอง" เก็บไว้เป็นประจำ</b> (เช่น ทุกสิ้นวัน) เพื่อกู้คืนได้ภายหลัง</p>
+      <div class="row">
+        <button class="btn secondary" id="exportBackupBtn">ดาวน์โหลดข้อมูลสำรอง (.json)</button>
+        <button class="btn secondary" id="importBackupBtn">นำเข้าข้อมูลสำรอง</button>
+        <input type="file" id="importBackupInput" accept="application/json" style="display:none;">
+      </div>
+      <div class="row" style="margin-top:14px;">
+        <button class="btn danger" id="resetAllBtn">ล้างข้อมูลทั้งหมด</button>
+      </div>
     </div>
   </div>
 
@@ -775,6 +782,60 @@
     renderProductsView();
     renderSettingsView();
     toast('ล้างข้อมูลเรียบร้อย');
+  });
+
+  document.getElementById('exportBackupBtn').addEventListener('click', function(){
+    var backup = {
+      appVersion: 1,
+      exportedAt: new Date().toISOString(),
+      products: state.products,
+      settings: state.settings,
+      orders: state.orders
+    };
+    var blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'cafe-order-backup-' + todayStr() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('ดาวน์โหลดไฟล์สำรองข้อมูลเรียบร้อย');
+  });
+
+  document.getElementById('importBackupBtn').addEventListener('click', function(){
+    document.getElementById('importBackupInput').click();
+  });
+
+  document.getElementById('importBackupInput').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    e.target.value = '';
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var data;
+      try{ data = JSON.parse(ev.target.result); }
+      catch(err){ toast('ไม่สามารถอ่านไฟล์นี้ได้ (ไม่ใช่ไฟล์ JSON ที่ถูกต้อง)'); return; }
+      if(!data || !Array.isArray(data.products) || !Array.isArray(data.orders) || typeof data.settings !== 'object'){
+        toast('ไฟล์สำรองข้อมูลไม่ถูกต้อง');
+        return;
+      }
+      if(!confirm('การนำเข้าข้อมูลจะเขียนทับข้อมูลปัจจุบันทั้งหมด (สินค้า, ออเดอร์, การตั้งค่า) ต้องการดำเนินการต่อหรือไม่?')) return;
+      state.products = data.products;
+      state.settings = data.settings;
+      state.orders = data.orders;
+      persistProducts();
+      persistSettings();
+      persistOrders();
+      applyShopBranding();
+      applyTheme();
+      renderPOS();
+      renderProductsView();
+      renderSettingsView();
+      toast('นำเข้าข้อมูลสำเร็จ');
+    };
+    reader.readAsText(file);
   });
 
   function escapeHtml(str){
