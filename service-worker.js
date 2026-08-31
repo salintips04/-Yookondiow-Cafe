@@ -1,4 +1,4 @@
-var CACHE_NAME = 'cafe-order-v1';
+var CACHE_NAME = 'cafe-order-v3';
 var APP_SHELL = [
   './',
   './index.html',

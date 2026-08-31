@@ -66,6 +66,12 @@
   .receipt h3{text-align:center;margin:0 0 4px;font-family:'Segoe UI',sans-serif;}
   .receipt .sub{text-align:center;color:var(--sub);font-size:12px;margin-bottom:10px;}
   .receipt .line{border-top:1px dashed #999;margin:8px 0;}
+  #receiptQrWrap svg{width:160px;height:160px;display:block;margin:0 auto;}
+  .cat-pill{padding:6px 14px;border-radius:20px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:13px;color:var(--ink);}
+  .cat-pill.active{background:var(--brand);color:#fff;border-color:var(--brand);}
+  .cat-pill-manage{display:inline-flex;align-items:center;gap:6px;padding:5px 8px 5px 14px;border-radius:20px;border:1px solid var(--line);background:#fffaf5;font-size:13px;}
+  .cat-pill-manage button{border:none;background:#e7ddd3;color:var(--ink);width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;}
+  .cat-pill-manage button:hover{background:var(--danger);color:#fff;}
   .receipt table{font-size:12.5px;}
   .receipt td{padding:3px 4px;border:none;}
   .modal-actions{display:flex;gap:8px;padding:12px 20px 20px;}
@@ -103,6 +109,7 @@
         <h2 style="margin:0;">เมนูสินค้า</h2>
         <div id="orderCapInfo" class="badge ok"></div>
       </div>
+      <div class="row" id="categoryFilterRow" style="margin-bottom:10px;"></div>
       <div class="grid" id="productGrid"></div>
     </div>
     <div class="card">
@@ -123,6 +130,7 @@
       <div class="row">
         <input type="hidden" id="productId">
         <input type="text" id="productName" placeholder="ชื่อสินค้า" style="min-width:150px;">
+        <select id="productCategory" style="min-width:160px;"></select>
         <input type="number" id="productPrice" placeholder="ราคา (บาท)" min="0" step="0.01" style="width:120px;">
         <input type="number" id="productLimit" placeholder="จำกัด/วัน (ว่าง=ไม่จำกัด)" min="0" style="width:190px;">
         <button class="btn" id="saveProductBtn">บันทึกสินค้า</button>
@@ -130,9 +138,17 @@
       </div>
     </div>
     <div class="card">
-      <h2>รายการสินค้าทั้งหมด</h2>
+      <div class="row" style="justify-content:space-between;align-items:center;">
+        <div>
+          <h2 style="margin:0;">รายการสินค้าทั้งหมด</h2>
+        </div>
+        <div class="row" style="gap:8px;">
+          <button class="btn secondary" id="openToppingManageModalBtn">จัดการท็อปปิ้ง</button>
+          <button class="btn secondary" id="openCategoryModalBtn">จัดการหมวดหมู่</button>
+        </div>
+      </div>
       <table>
-        <thead><tr><th>ชื่อสินค้า</th><th>ราคา</th><th>จำกัด/วัน</th><th>ขายวันนี้</th><th>คงเหลือวันนี้</th><th></th></tr></thead>
+        <thead><tr><th>ชื่อสินค้า</th><th>หมวดหมู่</th><th>ราคา</th><th>จำกัด/วัน</th><th>ขายวันนี้</th><th>คงเหลือวันนี้</th><th></th></tr></thead>
         <tbody id="productTableBody"></tbody>
       </table>
     </div>
@@ -161,6 +177,14 @@
         <tbody id="orderHistoryBody"></tbody>
       </table>
     </div>
+    <div class="card">
+      <h2>ส่งออกยอดขายรายเดือน</h2>
+      <p style="font-size:13px;color:var(--sub);">ส่งออกยอดขายรายวันของทั้งเดือนเป็นไฟล์ที่เปิดใน Excel ได้ทันที (.csv)</p>
+      <div class="row">
+        <input type="month" id="exportMonth">
+        <button class="btn" id="exportMonthlyExcelBtn">Excel</button>
+      </div>
+    </div>
   </div>
 
   <!-- SETTINGS VIEW -->
@@ -178,6 +202,16 @@
         <button class="btn secondary" id="removeLogoBtn" style="display:none;">ลบโลโก้</button>
       </div>
       <p style="font-size:12px;color:var(--sub);margin:6px 0 0;">อัปโหลดโลโก้ร้าน (jpg/png) จะแสดงแทนไอคอน ☕ ที่หัวเว็บและใบเสร็จ</p>
+    </div>
+    <div class="card">
+      <h2>รับชำระเงิน (QR code ในใบเสร็จ)</h2>
+      <p style="font-size:13px;color:var(--sub);">อัปโหลดรูปภาพ QR code พร้อมเพย์ของร้าน (ถ่ายรูปหรือแคปจากแอปธนาคาร) เพื่อแสดงในใบเสร็จทุกใบ ให้ลูกค้าสแกนจ่ายเอง</p>
+      <div class="row" style="align-items:center;">
+        <img id="staticQrPreview" style="display:none;height:100px;width:100px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fff;padding:4px;">
+        <input type="file" id="staticQrInput" accept="image/*">
+        <button class="btn secondary" id="removeStaticQrBtn" style="display:none;">ลบรูป QR</button>
+      </div>
+      <p style="font-size:12px;color:var(--sub);margin:6px 0 0;">ไม่อัปโหลด = ใบเสร็จจะไม่มี QR code</p>
     </div>
     <div class="card">
       <h2>ธีมสีร้าน</h2>
@@ -224,6 +258,64 @@
   </div>
 </div>
 
+<!-- CATEGORY MODAL -->
+<div class="modal-bg" id="categoryModal">
+  <div class="modal" style="max-width:340px;">
+    <div style="padding:20px;">
+      <h2 style="margin:0 0 4px;">จัดการหมวดหมู่</h2>
+      <p style="font-size:12px;color:var(--sub);margin:0 0 12px;">เพิ่มหมวดหมู่ได้โดยไม่ต้องผูกกับสินค้า และจะอยู่ในลิสต์ตลอดจนกว่าจะลบเอง</p>
+      <div class="row">
+        <input type="text" id="newCategoryInput" placeholder="ชื่อหมวดหมู่ใหม่" style="flex:1;min-width:0;" onfocus="this.select()">
+        <button class="btn" id="addCategoryBtn">เพิ่ม</button>
+      </div>
+      <div class="row" id="categoryManageRow" style="margin-top:12px;gap:8px;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="closeCategoryModalBtn">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOPPING SELECTION MODAL (shown when adding a product to cart) -->
+<div class="modal-bg" id="toppingModal">
+  <div class="modal" style="max-width:360px;">
+    <div style="padding:20px;">
+      <h2 id="toppingModalProductName" style="margin:0 0 4px;"></h2>
+      <div id="toppingModalBasePrice" style="font-size:13px;color:var(--sub);margin-bottom:12px;"></div>
+      <div id="toppingCheckboxList" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div class="row" style="margin-top:14px;justify-content:flex-end;">
+        <div style="font-weight:700;">รวม: <span id="toppingModalTotal"></span></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="cancelToppingModalBtn">ยกเลิก</button>
+      <button class="btn" id="confirmToppingModalBtn">เพิ่มลงตะกร้า</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOPPING MANAGEMENT MODAL -->
+<div class="modal-bg" id="toppingManageModal">
+  <div class="modal" style="max-width:380px;">
+    <div style="padding:20px;">
+      <h2 style="margin:0 0 4px;">จัดการท็อปปิ้ง</h2>
+      <p style="font-size:12px;color:var(--sub);margin:0 0 12px;">เพิ่มท็อปปิ้งพร้อมราคา และเลือกหมวดหมู่ที่จะใช้ท็อปปิ้งนี้ได้ ลูกค้าจะเห็นเฉพาะท็อปปิ้งที่ตรงกับหมวดหมู่ของสินค้านั้น</p>
+      <div class="row">
+        <input type="text" id="newToppingName" placeholder="ชื่อท็อปปิ้ง" style="flex:1;min-width:0;" onfocus="this.select()">
+        <input type="number" id="newToppingPrice" placeholder="ราคา" min="0" step="0.01" style="width:90px;" onfocus="this.select()">
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <select id="newToppingCategory" style="flex:1;min-width:0;"></select>
+        <button class="btn" id="addToppingBtn">เพิ่ม</button>
+      </div>
+      <div id="toppingManageList" style="margin-top:12px;display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="closeToppingManageModalBtn">ปิด</button>
+    </div>
+  </div>
+</div>
+
 <div id="printRoot"></div>
 
 <div class="toast" id="toast"></div>
@@ -235,6 +327,8 @@
   var LS_PRODUCTS = "cafe_products";
   var LS_SETTINGS = "cafe_settings";
   var LS_ORDERS = "cafe_orders";
+  var LS_CATEGORIES = "cafe_categories";
+  var LS_TOPPINGS = "cafe_toppings";
 
   function loadJSON(key, fallback){
     try{ var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
@@ -252,14 +346,29 @@
 
   var state = {
     products: loadJSON(LS_PRODUCTS, []),
-    settings: loadJSON(LS_SETTINGS, { dailyOrderLimit: 0, shopName: 'ร้านคาเฟ่', logo: '', brandColor: '' }),
+    settings: loadJSON(LS_SETTINGS, { dailyOrderLimit: 0, shopName: 'ร้านคาเฟ่', logo: '', brandColor: '', staticQrImage: '' }),
     orders: loadJSON(LS_ORDERS, []),
-    cart: {} // productId -> qty
+    categories: loadJSON(LS_CATEGORIES, []),
+    toppings: loadJSON(LS_TOPPINGS, []),
+    cart: [], // array of { id, productId, qty, toppings: [{id,name,price}] }
+    selectedCategory: 'all'
   };
 
   function persistProducts(){ saveJSON(LS_PRODUCTS, state.products); }
   function persistSettings(){ saveJSON(LS_SETTINGS, state.settings); }
   function persistOrders(){ saveJSON(LS_ORDERS, state.orders); }
+  function persistCategories(){ saveJSON(LS_CATEGORIES, state.categories); }
+  function persistToppings(){ saveJSON(LS_TOPPINGS, state.toppings); }
+
+  function addCategoryIfNew(name){
+    var trimmed = (name || '').trim();
+    if(!trimmed) return;
+    if(state.categories.indexOf(trimmed) === -1){
+      state.categories.push(trimmed);
+      state.categories.sort();
+      persistCategories();
+    }
+  }
 
   function ordersForDate(dateStr){
     return state.orders.filter(function(o){ return o.date === dateStr; });
@@ -381,7 +490,7 @@
     document.title = name + ' - ระบบจัดการออเดอร์';
   }
 
-  function handleLogoFile(file){
+  function readAndResizeImage(file, maxDim, callback){
     if(!file) return;
     if(!file.type || file.type.indexOf('image/') !== 0){
       toast('กรุณาเลือกไฟล์รูปภาพ');
@@ -391,32 +500,81 @@
     reader.onload = function(e){
       var img = new Image();
       img.onload = function(){
-        var maxDim = 240;
         var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
         var w = Math.max(1, Math.round(img.width * scale));
         var h = Math.max(1, Math.round(img.height * scale));
         var canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        state.settings.logo = canvas.toDataURL('image/png');
-        persistSettings();
-        applyShopBranding();
-        renderSettingsView();
-        toast('อัปโหลดโลโก้เรียบร้อย');
+        callback(canvas.toDataURL('image/png'));
       };
       img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   }
 
+  function handleLogoFile(file){
+    readAndResizeImage(file, 240, function(dataUrl){
+      state.settings.logo = dataUrl;
+      persistSettings();
+      applyShopBranding();
+      renderSettingsView();
+      toast('อัปโหลดโลโก้เรียบร้อย');
+    });
+  }
+
+  function handleStaticQrFile(file){
+    readAndResizeImage(file, 600, function(dataUrl){
+      state.settings.staticQrImage = dataUrl;
+      persistSettings();
+      renderSettingsView();
+      toast('อัปโหลดรูป QR เรียบร้อย');
+    });
+  }
+
   // ---------- POS VIEW ----------
+  function getCategories(){
+    return state.categories.slice().sort();
+  }
+
+  function renderCategoryFilter(){
+    var wrap = document.getElementById('categoryFilterRow');
+    var categories = getCategories();
+    if(categories.length === 0){
+      wrap.innerHTML = '';
+      wrap.style.display = 'none';
+      return;
+    }
+    wrap.style.display = 'flex';
+    var allBtn = { key: 'all', label: 'ทั้งหมด' };
+    var items = [allBtn].concat(categories.map(function(c){ return { key: c, label: c }; }));
+    wrap.innerHTML = '';
+    items.forEach(function(item){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cat-pill' + (state.selectedCategory === item.key ? ' active' : '');
+      btn.textContent = item.label;
+      btn.addEventListener('click', function(){
+        state.selectedCategory = item.key;
+        renderPOS();
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
   function renderPOS(){
+    renderCategoryFilter();
     var grid = document.getElementById('productGrid');
     grid.innerHTML = '';
+    var visibleProducts = state.selectedCategory === 'all'
+      ? state.products
+      : state.products.filter(function(p){ return (p.category || '').trim() === state.selectedCategory; });
     if(state.products.length === 0){
       grid.innerHTML = '<div class="empty">ยังไม่มีสินค้า กรุณาเพิ่มสินค้าในแท็บ "สินค้า"</div>';
+    } else if(visibleProducts.length === 0){
+      grid.innerHTML = '<div class="empty">ไม่มีสินค้าในหมวดหมู่นี้</div>';
     }
-    state.products.forEach(function(p){
+    visibleProducts.forEach(function(p){
       var rem = remainingStock(p);
       var tile = document.createElement('div');
       tile.className = 'product-tile' + (rem <= 0 ? ' disabled' : '');
@@ -445,36 +603,74 @@
     renderCart();
   }
 
-  function addToCart(productId){
+  function cartQtyForProduct(productId){
+    return state.cart.filter(function(l){ return l.productId === productId; }).reduce(function(s, l){ return s + l.qty; }, 0);
+  }
+
+  function toppingsKey(toppings){
+    return toppings.map(function(t){ return t.id; }).sort().join(',');
+  }
+
+  function addLineToCart(productId, toppings){
     var product = state.products.find(function(p){ return p.id === productId; });
     if(!product) return;
     var rem = remainingStock(product);
-    var currentInCart = state.cart[productId] || 0;
-    if(currentInCart + 1 > rem){
+    var currentQty = cartQtyForProduct(productId);
+    if(currentQty + 1 > rem){
       toast('สินค้า "' + product.name + '" เหลือไม่พอ (คงเหลือ ' + rem + ')');
       return;
     }
-    state.cart[productId] = currentInCart + 1;
+    var key = toppingsKey(toppings);
+    var existing = state.cart.find(function(l){ return l.productId === productId && toppingsKey(l.toppings) === key; });
+    if(existing){
+      existing.qty += 1;
+    } else {
+      state.cart.push({ id: uid(), productId: productId, qty: 1, toppings: toppings });
+    }
     renderPOS();
   }
 
-  function changeCartQty(productId, delta){
+  function toppingsForProduct(product){
+    var cat = (product.category || '').trim();
+    return state.toppings.filter(function(t){
+      return !t.category || t.category === cat;
+    });
+  }
+
+  function addToCart(productId){
     var product = state.products.find(function(p){ return p.id === productId; });
-    var newQty = (state.cart[productId] || 0) + delta;
-    if(newQty <= 0){ delete state.cart[productId]; renderPOS(); return; }
+    if(!product) return;
+    if(toppingsForProduct(product).length > 0){
+      openToppingModal(productId);
+      return;
+    }
+    addLineToCart(productId, []);
+  }
+
+  function changeCartLineQty(lineId, delta){
+    var line = state.cart.find(function(l){ return l.id === lineId; });
+    if(!line) return;
+    var product = state.products.find(function(p){ return p.id === line.productId; });
+    if(!product) return;
+    var newQty = line.qty + delta;
+    if(newQty <= 0){
+      state.cart = state.cart.filter(function(l){ return l.id !== lineId; });
+      renderPOS();
+      return;
+    }
+    var otherQty = cartQtyForProduct(line.productId) - line.qty;
     var rem = remainingStock(product);
-    if(newQty > rem){
+    if(otherQty + newQty > rem){
       toast('สินค้า "' + product.name + '" เหลือไม่พอ (คงเหลือ ' + rem + ')');
       return;
     }
-    state.cart[productId] = newQty;
+    line.qty = newQty;
     renderPOS();
   }
 
   function renderCart(){
     var rows = document.getElementById('cartRows');
-    var ids = Object.keys(state.cart);
-    if(ids.length === 0){
+    if(state.cart.length === 0){
       rows.innerHTML = '<div class="empty">ยังไม่มีสินค้าในตะกร้า</div>';
       document.getElementById('cartTotal').textContent = fmtMoney(0);
       document.getElementById('checkoutBtn').disabled = true;
@@ -482,24 +678,28 @@
     }
     rows.innerHTML = '';
     var total = 0;
-    ids.forEach(function(pid){
-      var product = state.products.find(function(p){ return p.id === pid; });
+    state.cart.forEach(function(line){
+      var product = state.products.find(function(p){ return p.id === line.productId; });
       if(!product) return;
-      var qty = state.cart[pid];
-      var lineTotal = product.price * qty;
+      var toppingsSum = line.toppings.reduce(function(s, t){ return s + t.price; }, 0);
+      var unitPrice = product.price + toppingsSum;
+      var lineTotal = unitPrice * line.qty;
       total += lineTotal;
+      var toppingsLabel = line.toppings.length
+        ? ('<br><span style="color:var(--accent);font-size:12px;">+ ' + line.toppings.map(function(t){ return escapeHtml(t.name); }).join(', ') + '</span>')
+        : '';
       var row = document.createElement('div');
       row.className = 'cart-row';
       row.innerHTML =
-        '<div>' + escapeHtml(product.name) + '<br><span style="color:var(--sub);font-size:12px;">' + fmtMoney(product.price) + ' x ' + qty + '</span></div>' +
+        '<div>' + escapeHtml(product.name) + toppingsLabel + '<br><span style="color:var(--sub);font-size:12px;">' + fmtMoney(unitPrice) + ' x ' + line.qty + '</span></div>' +
         '<div class="qty-ctrl">' +
           '<button data-act="minus">−</button>' +
-          '<span>' + qty + '</span>' +
+          '<span>' + line.qty + '</span>' +
           '<button data-act="plus">+</button>' +
           '<span style="min-width:70px;text-align:right;font-weight:600;">' + fmtMoney(lineTotal) + '</span>' +
         '</div>';
-      row.querySelector('[data-act="minus"]').addEventListener('click', function(){ changeCartQty(pid, -1); });
-      row.querySelector('[data-act="plus"]').addEventListener('click', function(){ changeCartQty(pid, 1); });
+      row.querySelector('[data-act="minus"]').addEventListener('click', function(){ changeCartLineQty(line.id, -1); });
+      row.querySelector('[data-act="plus"]').addEventListener('click', function(){ changeCartLineQty(line.id, 1); });
       rows.appendChild(row);
     });
     document.getElementById('cartTotal').textContent = fmtMoney(total);
@@ -507,32 +707,33 @@
   }
 
   document.getElementById('clearCartBtn').addEventListener('click', function(){
-    state.cart = {};
+    state.cart = [];
     renderPOS();
   });
 
   document.getElementById('checkoutBtn').addEventListener('click', function(){
-    var ids = Object.keys(state.cart);
-    if(ids.length === 0) return;
+    if(state.cart.length === 0) return;
 
     if(remainingOrderSlots() <= 0){
       toast('ครบจำนวนออเดอร์สูงสุดของวันนี้แล้ว');
       return;
     }
     // re-validate stock at checkout time
-    for(var i=0;i<ids.length;i++){
-      var product = state.products.find(function(p){ return p.id === ids[i]; });
+    var productIds = state.cart.map(function(l){ return l.productId; }).filter(function(v, i, arr){ return arr.indexOf(v) === i; });
+    for(var i=0;i<productIds.length;i++){
+      var product = state.products.find(function(p){ return p.id === productIds[i]; });
       var rem = remainingStock(product);
-      if(state.cart[ids[i]] > rem){
+      var totalQty = cartQtyForProduct(productIds[i]);
+      if(totalQty > rem){
         toast('สินค้า "' + product.name + '" เหลือไม่พอสำหรับออเดอร์นี้');
         return;
       }
     }
 
-    var items = ids.map(function(pid){
-      var product = state.products.find(function(p){ return p.id === pid; });
-      var qty = state.cart[pid];
-      return { productId: pid, name: product.name, price: product.price, qty: qty };
+    var items = state.cart.map(function(line){
+      var product = state.products.find(function(p){ return p.id === line.productId; });
+      var toppingsSum = line.toppings.reduce(function(s, t){ return s + t.price; }, 0);
+      return { productId: line.productId, name: product.name, price: product.price + toppingsSum, toppings: line.toppings, qty: line.qty };
     });
     var total = items.reduce(function(sum, it){ return sum + it.price * it.qty; }, 0);
 
@@ -546,7 +747,7 @@
     };
     state.orders.push(order);
     persistOrders();
-    state.cart = {};
+    state.cart = [];
     renderPOS();
     showReceipt(order);
   });
@@ -555,7 +756,8 @@
   function showReceipt(order){
     var el = document.getElementById('receiptContent');
     var rowsHtml = order.items.map(function(it){
-      return '<tr><td>' + escapeHtml(it.name) + '</td><td style="text-align:center;">x' + it.qty + '</td><td style="text-align:right;">' + (it.price*it.qty).toFixed(2) + '</td></tr>';
+      var toppingsStr = (it.toppings && it.toppings.length) ? (' (+' + it.toppings.map(function(t){ return t.name; }).join(', ') + ')') : '';
+      return '<tr><td>' + escapeHtml(it.name + toppingsStr) + '</td><td style="text-align:center;">x' + it.qty + '</td><td style="text-align:right;">' + (it.price*it.qty).toFixed(2) + '</td></tr>';
     }).join('');
     var logoHtml = state.settings.logo
       ? '<div style="text-align:center;margin-bottom:6px;"><img src="' + state.settings.logo + '" style="max-height:60px;max-width:160px;"></div>'
@@ -569,11 +771,146 @@
       '<table>' + rowsHtml + '</table>' +
       '<div class="line"></div>' +
       '<table><tr><td style="font-weight:700;">รวมทั้งสิ้น</td><td></td><td style="text-align:right;font-weight:700;">' + order.total.toFixed(2) + ' บาท</td></tr></table>' +
+      '<div id="receiptQrWrap"></div>' +
       '<div class="sub" style="margin-top:10px;">ขอบคุณที่ใช้บริการค่ะ/ครับ</div>';
+
+    var qrWrap = document.getElementById('receiptQrWrap');
+    if(state.settings.staticQrImage){
+      qrWrap.innerHTML = '<div class="line"></div><div class="sub" style="margin:8px 0 4px;">สแกนจ่ายด้วย PromptPay</div>' +
+        '<img src="' + state.settings.staticQrImage + '" style="max-width:200px;max-height:200px;display:block;margin:0 auto;border-radius:6px;">';
+    }
     document.getElementById('receiptModal').classList.add('active');
   }
   document.getElementById('closeReceiptBtn').addEventListener('click', function(){
     document.getElementById('receiptModal').classList.remove('active');
+  });
+  document.getElementById('openCategoryModalBtn').addEventListener('click', function(){
+    renderCategoryManage();
+    document.getElementById('categoryModal').classList.add('active');
+  });
+  document.getElementById('closeCategoryModalBtn').addEventListener('click', function(){
+    document.getElementById('categoryModal').classList.remove('active');
+  });
+
+  var toppingModalProductId = null;
+  function openToppingModal(productId){
+    var product = state.products.find(function(p){ return p.id === productId; });
+    if(!product) return;
+    toppingModalProductId = productId;
+    document.getElementById('toppingModalProductName').textContent = product.name;
+    document.getElementById('toppingModalBasePrice').textContent = 'ราคาพื้นฐาน ' + fmtMoney(product.price);
+    var list = document.getElementById('toppingCheckboxList');
+    list.innerHTML = '';
+    toppingsForProduct(product).forEach(function(t){
+      var label = document.createElement('label');
+      label.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;';
+      var checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = t.id;
+      checkbox.style.cssText = 'width:16px;height:16px;';
+      checkbox.addEventListener('change', updateToppingModalTotal);
+      var span = document.createElement('span');
+      span.textContent = t.name + ' (+' + fmtMoney(t.price) + ')';
+      label.appendChild(checkbox);
+      label.appendChild(span);
+      list.appendChild(label);
+    });
+    updateToppingModalTotal();
+    document.getElementById('toppingModal').classList.add('active');
+  }
+
+  function getSelectedToppingIds(){
+    return Array.prototype.slice.call(document.querySelectorAll('#toppingCheckboxList input:checked')).map(function(cb){ return cb.value; });
+  }
+
+  function updateToppingModalTotal(){
+    var product = state.products.find(function(p){ return p.id === toppingModalProductId; });
+    if(!product) return;
+    var ids = getSelectedToppingIds();
+    var sum = product.price + ids.reduce(function(s, id){
+      var t = state.toppings.find(function(x){ return x.id === id; });
+      return s + (t ? t.price : 0);
+    }, 0);
+    document.getElementById('toppingModalTotal').textContent = fmtMoney(sum);
+  }
+
+  document.getElementById('cancelToppingModalBtn').addEventListener('click', function(){
+    document.getElementById('toppingModal').classList.remove('active');
+  });
+
+  document.getElementById('confirmToppingModalBtn').addEventListener('click', function(){
+    var product = state.products.find(function(p){ return p.id === toppingModalProductId; });
+    if(!product) return;
+    var ids = getSelectedToppingIds();
+    var toppings = ids.map(function(id){ return state.toppings.find(function(t){ return t.id === id; }); })
+      .filter(Boolean)
+      .map(function(t){ return { id: t.id, name: t.name, price: t.price }; });
+    addLineToCart(product.id, toppings);
+    document.getElementById('toppingModal').classList.remove('active');
+  });
+
+  function renderToppingCategoryOptions(){
+    var select = document.getElementById('newToppingCategory');
+    var categories = getCategories();
+    var options = ['<option value="">ทุกหมวดหมู่</option>'].concat(
+      categories.map(function(c){ return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; })
+    );
+    select.innerHTML = options.join('');
+  }
+
+  function renderToppingManage(){
+    renderToppingCategoryOptions();
+    var wrap = document.getElementById('toppingManageList');
+    if(state.toppings.length === 0){
+      wrap.innerHTML = '<div class="empty" style="padding:4px 0;">ยังไม่มีท็อปปิ้ง</div>';
+      return;
+    }
+    wrap.innerHTML = '';
+    state.toppings.forEach(function(t){
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;';
+      var span = document.createElement('span');
+      span.textContent = t.name + ' — ' + fmtMoney(t.price) + ' (' + (t.category || 'ทุกหมวดหมู่') + ')';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn danger';
+      btn.style.cssText = 'padding:4px 10px;font-size:12px;';
+      btn.textContent = 'ลบ';
+      btn.addEventListener('click', function(){ deleteTopping(t.id); });
+      row.appendChild(span);
+      row.appendChild(btn);
+      wrap.appendChild(row);
+    });
+  }
+
+  function deleteTopping(id){
+    if(!confirm('ต้องการลบท็อปปิ้งนี้หรือไม่?')) return;
+    state.toppings = state.toppings.filter(function(t){ return t.id !== id; });
+    persistToppings();
+    renderToppingManage();
+    toast('ลบท็อปปิ้งเรียบร้อย');
+  }
+
+  document.getElementById('addToppingBtn').addEventListener('click', function(){
+    var name = document.getElementById('newToppingName').value.trim();
+    var price = parseFloat(document.getElementById('newToppingPrice').value);
+    var category = document.getElementById('newToppingCategory').value;
+    if(!name){ toast('กรุณากรอกชื่อท็อปปิ้ง'); return; }
+    if(isNaN(price) || price < 0){ toast('กรุณากรอกราคาที่ถูกต้อง'); return; }
+    state.toppings.push({ id: uid(), name: name, price: price, category: category });
+    persistToppings();
+    document.getElementById('newToppingName').value = '';
+    document.getElementById('newToppingPrice').value = '';
+    renderToppingManage();
+    toast('เพิ่มท็อปปิ้งเรียบร้อย');
+  });
+
+  document.getElementById('openToppingManageModalBtn').addEventListener('click', function(){
+    renderToppingManage();
+    document.getElementById('toppingManageModal').classList.add('active');
+  });
+  document.getElementById('closeToppingManageModalBtn').addEventListener('click', function(){
+    document.getElementById('toppingManageModal').classList.remove('active');
   });
   document.getElementById('printReceiptBtn').addEventListener('click', function(){
     document.getElementById('printRoot').innerHTML = document.getElementById('receiptContent').innerHTML;
@@ -584,11 +921,67 @@
   });
 
   // ---------- PRODUCTS VIEW ----------
+  function renderProductCategorySelect(){
+    var select = document.getElementById('productCategory');
+    var current = select.value;
+    var options = ['<option value="">ไม่มีหมวดหมู่</option>'].concat(
+      getCategories().map(function(c){ return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; })
+    );
+    select.innerHTML = options.join('');
+    select.value = current;
+  }
+
+  function renderCategoryManage(){
+    var wrap = document.getElementById('categoryManageRow');
+    var categories = getCategories();
+    if(categories.length === 0){
+      wrap.innerHTML = '<div class="empty" style="padding:4px 0;">ยังไม่มีหมวดหมู่</div>';
+      return;
+    }
+    wrap.innerHTML = '';
+    categories.forEach(function(c){
+      var pill = document.createElement('span');
+      pill.className = 'cat-pill-manage';
+      pill.innerHTML = '<span></span><button type="button" title="ลบหมวดหมู่">×</button>';
+      pill.querySelector('span').textContent = c;
+      pill.querySelector('button').addEventListener('click', function(){ deleteCategory(c); });
+      wrap.appendChild(pill);
+    });
+  }
+
+  function deleteCategory(name){
+    if(!confirm('ต้องการลบหมวดหมู่ "' + name + '" หรือไม่? สินค้าที่เคยอยู่หมวดนี้จะกลายเป็น "ไม่มีหมวดหมู่"')) return;
+    state.categories = state.categories.filter(function(c){ return c !== name; });
+    persistCategories();
+    state.products.forEach(function(p){
+      if((p.category || '').trim() === name) p.category = '';
+    });
+    persistProducts();
+    if(state.selectedCategory === name) state.selectedCategory = 'all';
+    renderProductsView();
+    renderPOS();
+    toast('ลบหมวดหมู่เรียบร้อย');
+  }
+
+  document.getElementById('addCategoryBtn').addEventListener('click', function(){
+    var input = document.getElementById('newCategoryInput');
+    var name = input.value.trim();
+    if(!name){ toast('กรุณากรอกชื่อหมวดหมู่'); return; }
+    if(state.categories.indexOf(name) !== -1){ toast('มีหมวดหมู่นี้อยู่แล้ว'); return; }
+    addCategoryIfNew(name);
+    input.value = '';
+    renderProductsView();
+    renderPOS();
+    toast('เพิ่มหมวดหมู่เรียบร้อย');
+  });
+
   function renderProductsView(){
+    renderProductCategorySelect();
+    renderCategoryManage();
     var tbody = document.getElementById('productTableBody');
     tbody.innerHTML = '';
     if(state.products.length === 0){
-      tbody.innerHTML = '<tr><td colspan="6" class="empty">ยังไม่มีสินค้า</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">ยังไม่มีสินค้า</td></tr>';
       return;
     }
     state.products.forEach(function(p){
@@ -597,6 +990,7 @@
       var tr = document.createElement('tr');
       tr.innerHTML =
         '<td>' + escapeHtml(p.name) + '</td>' +
+        '<td>' + escapeHtml(p.category || '-') + '</td>' +
         '<td>' + fmtMoney(p.price) + '</td>' +
         '<td>' + (p.dailyLimit && p.dailyLimit > 0 ? p.dailyLimit : 'ไม่จำกัด') + '</td>' +
         '<td>' + sold + '</td>' +
@@ -613,6 +1007,7 @@
     if(!p) return;
     document.getElementById('productId').value = p.id;
     document.getElementById('productName').value = p.name;
+    document.getElementById('productCategory').value = p.category || '';
     document.getElementById('productPrice').value = p.price;
     document.getElementById('productLimit').value = p.dailyLimit || '';
     document.getElementById('cancelEditBtn').style.display = 'inline-block';
@@ -624,12 +1019,14 @@
     state.products = state.products.filter(function(p){ return p.id !== id; });
     persistProducts();
     renderProductsView();
+    renderPOS();
   }
 
   document.getElementById('cancelEditBtn').addEventListener('click', resetProductForm);
   function resetProductForm(){
     document.getElementById('productId').value = '';
     document.getElementById('productName').value = '';
+    document.getElementById('productCategory').value = '';
     document.getElementById('productPrice').value = '';
     document.getElementById('productLimit').value = '';
     document.getElementById('cancelEditBtn').style.display = 'none';
@@ -638,6 +1035,7 @@
   document.getElementById('saveProductBtn').addEventListener('click', function(){
     var id = document.getElementById('productId').value;
     var name = document.getElementById('productName').value.trim();
+    var category = document.getElementById('productCategory').value.trim();
     var price = parseFloat(document.getElementById('productPrice').value);
     var limitRaw = document.getElementById('productLimit').value;
     var limit = limitRaw === '' ? 0 : parseInt(limitRaw, 10);
@@ -647,13 +1045,15 @@
 
     if(id){
       var p = state.products.find(function(x){ return x.id === id; });
-      p.name = name; p.price = price; p.dailyLimit = limit;
+      p.name = name; p.category = category; p.price = price; p.dailyLimit = limit;
     } else {
-      state.products.push({ id: uid(), name: name, price: price, dailyLimit: limit });
+      state.products.push({ id: uid(), name: name, category: category, price: price, dailyLimit: limit });
     }
+    addCategoryIfNew(category);
     persistProducts();
     resetProductForm();
     renderProductsView();
+    renderPOS();
     toast('บันทึกสินค้าเรียบร้อย');
   });
 
@@ -663,6 +1063,8 @@
   function renderSummaryView(){
     var dateInput = document.getElementById('summaryDate');
     if(!dateInput.value) dateInput.value = todayStr();
+    var monthInput = document.getElementById('exportMonth');
+    if(!monthInput.value) monthInput.value = todayStr().slice(0, 7);
     var date = dateInput.value;
     var orders = ordersForDate(date);
 
@@ -693,7 +1095,10 @@
     var hist = document.getElementById('orderHistoryBody');
     hist.innerHTML = orders.length === 0 ? '<tr><td colspan="5" class="empty">ไม่มีออเดอร์ในวันนี้</td></tr>' :
       orders.slice().reverse().map(function(o){
-        var itemsStr = o.items.map(function(it){ return it.name + ' x' + it.qty; }).join(', ');
+        var itemsStr = o.items.map(function(it){
+          var toppingsStr = (it.toppings && it.toppings.length) ? (' (+' + it.toppings.map(function(t){ return t.name; }).join(', ') + ')') : '';
+          return it.name + toppingsStr + ' x' + it.qty;
+        }).join(', ');
         return '<tr><td>#' + o.orderNo + '</td><td>' + o.time + '</td><td>' + escapeHtml(itemsStr) + '</td><td>' + o.total.toFixed(2) + '</td>' +
           '<td><button class="btn secondary" data-id="' + o.id + '">ดูใบเสร็จ</button></td></tr>';
       }).join('');
@@ -704,6 +1109,64 @@
       });
     });
   }
+
+  function csvField(val){
+    var s = String(val === undefined || val === null ? '' : val);
+    if(/[",\n]/.test(s)){
+      s = '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  function exportMonthlyExcel(){
+    var val = document.getElementById('exportMonth').value;
+    if(!val){ toast('กรุณาเลือกเดือนที่ต้องการส่งออก'); return; }
+    var parts = val.split('-');
+    var year = parseInt(parts[0], 10), month = parseInt(parts[1], 10);
+    var daysInMonth = new Date(year, month, 0).getDate();
+
+    var rows = [];
+    rows.push(['วันที่', 'จำนวนออเดอร์', 'ยอดขายรวม (บาท)', 'จำนวนสินค้าที่ขาย']);
+    var totalOrders = 0, totalRevenue = 0, totalItems = 0;
+    var perProductMonth = {};
+    for(var d = 1; d <= daysInMonth; d++){
+      var dateStr = year + '-' + String(month).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      var dayOrders = ordersForDate(dateStr);
+      var dayRevenue = dayOrders.reduce(function(s, o){ return s + o.total; }, 0);
+      var dayItems = dayOrders.reduce(function(s, o){ return s + o.items.reduce(function(a, it){ return a + it.qty; }, 0); }, 0);
+      rows.push([dateStr, dayOrders.length, dayRevenue.toFixed(2), dayItems]);
+      totalOrders += dayOrders.length;
+      totalRevenue += dayRevenue;
+      totalItems += dayItems;
+      dayOrders.forEach(function(o){
+        o.items.forEach(function(it){
+          if(!perProductMonth[it.name]) perProductMonth[it.name] = { qty: 0, total: 0 };
+          perProductMonth[it.name].qty += it.qty;
+          perProductMonth[it.name].total += it.qty * it.price;
+        });
+      });
+    }
+    rows.push(['รวมทั้งเดือน', totalOrders, totalRevenue.toFixed(2), totalItems]);
+    rows.push([]);
+    rows.push(['สรุปยอดขายแยกตามสินค้า (ทั้งเดือน)']);
+    rows.push(['สินค้า', 'จำนวนที่ขาย', 'ยอดขาย (บาท)']);
+    Object.keys(perProductMonth).sort().forEach(function(name){
+      rows.push([name, perProductMonth[name].qty, perProductMonth[name].total.toFixed(2)]);
+    });
+
+    var csv = rows.map(function(r){ return r.map(csvField).join(','); }).join('\r\n');
+    var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'ยอดขาย-' + val + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('ส่งออกไฟล์ Excel เรียบร้อย');
+  }
+  document.getElementById('exportMonthlyExcelBtn').addEventListener('click', exportMonthlyExcel);
 
   // ---------- SETTINGS VIEW ----------
   function renderSettingsView(){
@@ -721,7 +1184,27 @@
     }
     renderThemePresets();
     document.getElementById('themeColorPicker').value = state.settings.brandColor || DEFAULT_BRAND_COLOR;
+    var qrPreview = document.getElementById('staticQrPreview');
+    var removeQrBtn = document.getElementById('removeStaticQrBtn');
+    if(state.settings.staticQrImage){
+      qrPreview.src = state.settings.staticQrImage;
+      qrPreview.style.display = 'inline-block';
+      removeQrBtn.style.display = 'inline-block';
+    } else {
+      qrPreview.style.display = 'none';
+      removeQrBtn.style.display = 'none';
+    }
   }
+  document.getElementById('staticQrInput').addEventListener('change', function(e){
+    handleStaticQrFile(e.target.files[0]);
+    e.target.value = '';
+  });
+  document.getElementById('removeStaticQrBtn').addEventListener('click', function(){
+    state.settings.staticQrImage = '';
+    persistSettings();
+    renderSettingsView();
+    toast('ลบรูป QR เรียบร้อย');
+  });
   document.getElementById('saveSettingsBtn').addEventListener('click', function(){
     var raw = document.getElementById('dailyOrderLimit').value;
     state.settings.dailyOrderLimit = raw === '' ? 0 : parseInt(raw, 10);
@@ -772,10 +1255,14 @@
     localStorage.removeItem(LS_PRODUCTS);
     localStorage.removeItem(LS_SETTINGS);
     localStorage.removeItem(LS_ORDERS);
+    localStorage.removeItem(LS_CATEGORIES);
+    localStorage.removeItem(LS_TOPPINGS);
     state.products = [];
-    state.settings = { dailyOrderLimit: 0, shopName: 'ร้านคาเฟ่', logo: '', brandColor: '' };
+    state.settings = { dailyOrderLimit: 0, shopName: 'ร้านคาเฟ่', logo: '', brandColor: '', staticQrImage: '' };
     state.orders = [];
-    state.cart = {};
+    state.categories = [];
+    state.toppings = [];
+    state.cart = [];
     applyShopBranding();
     applyTheme();
     renderPOS();
@@ -790,7 +1277,9 @@
       exportedAt: new Date().toISOString(),
       products: state.products,
       settings: state.settings,
-      orders: state.orders
+      orders: state.orders,
+      categories: state.categories,
+      toppings: state.toppings
     };
     var blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
@@ -825,9 +1314,13 @@
       state.products = data.products;
       state.settings = data.settings;
       state.orders = data.orders;
+      state.categories = Array.isArray(data.categories) ? data.categories : state.categories;
+      state.toppings = Array.isArray(data.toppings) ? data.toppings : state.toppings;
       persistProducts();
       persistSettings();
       persistOrders();
+      persistCategories();
+      persistToppings();
       applyShopBranding();
       applyTheme();
       renderPOS();
@@ -847,13 +1340,23 @@
   // ---------- seed sample data on first run ----------
   if(state.products.length === 0){
     state.products = [
-      { id: uid(), name: 'อเมริกาโน่', price: 45, dailyLimit: 0 },
-      { id: uid(), name: 'ลาเต้', price: 55, dailyLimit: 0 },
-      { id: uid(), name: 'คาปูชิโน่', price: 55, dailyLimit: 0 },
-      { id: uid(), name: 'ชาไทย', price: 45, dailyLimit: 20 },
-      { id: uid(), name: 'เค้กช็อกโกแลต', price: 65, dailyLimit: 10 }
+      { id: uid(), name: 'อเมริกาโน่', category: 'เครื่องดื่ม', price: 45, dailyLimit: 0 },
+      { id: uid(), name: 'ลาเต้', category: 'เครื่องดื่ม', price: 55, dailyLimit: 0 },
+      { id: uid(), name: 'คาปูชิโน่', category: 'เครื่องดื่ม', price: 55, dailyLimit: 0 },
+      { id: uid(), name: 'ชาไทย', category: 'เครื่องดื่ม', price: 45, dailyLimit: 20 },
+      { id: uid(), name: 'เค้กช็อกโกแลต', category: 'ขนม', price: 65, dailyLimit: 10 }
     ];
     persistProducts();
+  }
+
+  if(state.categories.length === 0){
+    var existingCats = {};
+    state.products.forEach(function(p){
+      var cat = (p.category || '').trim();
+      if(cat) existingCats[cat] = true;
+    });
+    state.categories = Object.keys(existingCats).sort();
+    persistCategories();
   }
 
   setHeaderDate();
