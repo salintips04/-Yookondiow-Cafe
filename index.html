@@ -105,10 +105,7 @@
   <!-- POS VIEW -->
   <div class="view active" id="view-pos">
     <div class="card">
-      <div class="row" style="justify-content:space-between;">
-        <h2 style="margin:0;">เมนูสินค้า</h2>
-        <div id="orderCapInfo" class="badge ok"></div>
-      </div>
+      <h2>เมนูสินค้า</h2>
       <div class="row" id="categoryFilterRow" style="margin-bottom:10px;"></div>
       <div class="grid" id="productGrid"></div>
     </div>
@@ -116,6 +113,14 @@
       <h2>ตะกร้าออเดอร์</h2>
       <div id="cartRows"><div class="empty">ยังไม่มีสินค้าในตะกร้า</div></div>
       <div class="totals grand"><span>ยอดรวม</span><span id="cartTotal">0.00 บาท</span></div>
+      <div class="row" style="margin-top:10px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;">
+          <input type="radio" name="paymentMethod" value="cash" checked> เงินสด
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;">
+          <input type="radio" name="paymentMethod" value="transfer"> โอน
+        </label>
+      </div>
       <div class="row" style="margin-top:10px;justify-content:flex-end;">
         <button class="btn secondary" id="clearCartBtn">ล้างตะกร้า</button>
         <button class="btn" id="checkoutBtn">ยืนยันออเดอร์ &amp; ออกใบเสร็จ</button>
@@ -172,8 +177,9 @@
     </div>
     <div class="card">
       <h2>ประวัติออเดอร์</h2>
+      <div class="row" id="paymentFilterRow" style="margin-bottom:10px;"></div>
       <table>
-        <thead><tr><th>เลขที่</th><th>เวลา</th><th>รายการ</th><th>ยอดรวม</th><th></th></tr></thead>
+        <thead><tr><th>เลขที่</th><th>เวลา</th><th>รายการ</th><th>ยอดรวม</th><th>ชำระโดย</th><th></th></tr></thead>
         <tbody id="orderHistoryBody"></tbody>
       </table>
     </div>
@@ -221,14 +227,6 @@
         <label style="font-size:13px;color:var(--sub);">สีกำหนดเอง:</label>
         <input type="color" id="themeColorPicker" style="width:50px;height:36px;padding:2px;cursor:pointer;">
         <button class="btn secondary" id="resetThemeBtn">รีเซ็ตเป็นค่าเริ่มต้น</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>ตั้งค่าจำกัดออเดอร์ต่อวัน</h2>
-      <p style="font-size:13px;color:var(--sub);">กำหนดจำนวนออเดอร์รวมสูงสุดที่รับได้ต่อวัน (แยกต่างหากจากจำกัดจำนวนต่อสินค้า) ปล่อยว่างหรือ 0 = ไม่จำกัด</p>
-      <div class="row">
-        <input type="number" id="dailyOrderLimit" min="0" style="width:160px;" onfocus="this.select()">
-        <button class="btn" id="saveSettingsBtn">บันทึก</button>
       </div>
     </div>
     <div class="card">
@@ -346,12 +344,13 @@
 
   var state = {
     products: loadJSON(LS_PRODUCTS, []),
-    settings: loadJSON(LS_SETTINGS, { dailyOrderLimit: 0, shopName: 'ร้านคาเฟ่', logo: '', brandColor: '', staticQrImage: '' }),
+    settings: loadJSON(LS_SETTINGS, { shopName: 'ร้านคาเฟ่', logo: '', brandColor: '', staticQrImage: '' }),
     orders: loadJSON(LS_ORDERS, []),
     categories: loadJSON(LS_CATEGORIES, []),
     toppings: loadJSON(LS_TOPPINGS, []),
     cart: [], // array of { id, productId, qty, toppings: [{id,name,price}] }
-    selectedCategory: 'all'
+    selectedCategory: 'all',
+    selectedPaymentFilter: 'all'
   };
 
   function persistProducts(){ saveJSON(LS_PRODUCTS, state.products); }
@@ -389,12 +388,6 @@
   }
 
   function todayOrderCount(){ return ordersForDate(todayStr()).length; }
-
-  function remainingOrderSlots(){
-    var cap = state.settings.dailyOrderLimit;
-    if(!cap || cap <= 0) return Infinity;
-    return Math.max(0, cap - todayOrderCount());
-  }
 
   function toast(msg){
     var t = document.getElementById('toast');
@@ -590,16 +583,6 @@
       grid.appendChild(tile);
     });
 
-    var slots = remainingOrderSlots();
-    var capInfo = document.getElementById('orderCapInfo');
-    if(slots === Infinity){
-      capInfo.textContent = 'ไม่จำกัดจำนวนออเดอร์/วัน';
-      capInfo.className = 'badge ok';
-    } else {
-      capInfo.textContent = 'รับออเดอร์ได้อีก ' + slots + ' / ' + state.settings.dailyOrderLimit + ' วันนี้';
-      capInfo.className = 'badge ' + (slots === 0 ? 'danger' : (slots <= 3 ? 'warn' : 'ok'));
-    }
-
     renderCart();
   }
 
@@ -714,10 +697,6 @@
   document.getElementById('checkoutBtn').addEventListener('click', function(){
     if(state.cart.length === 0) return;
 
-    if(remainingOrderSlots() <= 0){
-      toast('ครบจำนวนออเดอร์สูงสุดของวันนี้แล้ว');
-      return;
-    }
     // re-validate stock at checkout time
     var productIds = state.cart.map(function(l){ return l.productId; }).filter(function(v, i, arr){ return arr.indexOf(v) === i; });
     for(var i=0;i<productIds.length;i++){
@@ -736,6 +715,7 @@
       return { productId: line.productId, name: product.name, price: product.price + toppingsSum, toppings: line.toppings, qty: line.qty };
     });
     var total = items.reduce(function(sum, it){ return sum + it.price * it.qty; }, 0);
+    var paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
 
     var order = {
       id: uid(),
@@ -743,12 +723,14 @@
       date: todayStr(),
       time: new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}),
       items: items,
-      total: total
+      total: total,
+      paymentMethod: paymentMethod
     };
     state.orders.push(order);
     persistOrders();
     state.cart = [];
     renderPOS();
+    document.querySelector('input[name="paymentMethod"][value="cash"]').checked = true;
     showReceipt(order);
   });
 
@@ -771,11 +753,12 @@
       '<table>' + rowsHtml + '</table>' +
       '<div class="line"></div>' +
       '<table><tr><td style="font-weight:700;">รวมทั้งสิ้น</td><td></td><td style="text-align:right;font-weight:700;">' + order.total.toFixed(2) + ' บาท</td></tr></table>' +
+      (order.paymentMethod === 'transfer' ? '<div class="sub" style="margin-top:8px;">ชำระโดย: โอนเงิน</div>' : '') +
       '<div id="receiptQrWrap"></div>' +
       '<div class="sub" style="margin-top:10px;">ขอบคุณที่ใช้บริการค่ะ/ครับ</div>';
 
     var qrWrap = document.getElementById('receiptQrWrap');
-    if(state.settings.staticQrImage){
+    if(order.paymentMethod === 'transfer' && state.settings.staticQrImage){
       qrWrap.innerHTML = '<div class="line"></div><div class="sub" style="margin:8px 0 4px;">สแกนจ่ายด้วย PromptPay</div>' +
         '<img src="' + state.settings.staticQrImage + '" style="max-width:200px;max-height:200px;display:block;margin:0 auto;border-radius:6px;">';
     }
@@ -1069,11 +1052,9 @@
     var orders = ordersForDate(date);
 
     var revenue = orders.reduce(function(s,o){ return s + o.total; }, 0);
-    var cap = state.settings.dailyOrderLimit;
-    var capText = cap && cap > 0 ? (orders.length + ' / ' + cap) : (orders.length + ' / ไม่จำกัด');
 
     document.getElementById('summaryStats').innerHTML =
-      '<div class="stat"><div class="label">จำนวนออเดอร์</div><div class="value">' + capText + '</div></div>' +
+      '<div class="stat"><div class="label">จำนวนออเดอร์</div><div class="value">' + orders.length + '</div></div>' +
       '<div class="stat"><div class="label">ยอดขายรวม</div><div class="value">' + revenue.toFixed(2) + '</div></div>' +
       '<div class="stat"><div class="label">จำนวนสินค้าที่ขายได้</div><div class="value">' + orders.reduce(function(s,o){ return s + o.items.reduce(function(a,it){return a+it.qty;},0); },0) + '</div></div>';
 
@@ -1092,14 +1073,22 @@
         return '<tr><td>' + escapeHtml(n) + '</td><td>' + perProduct[n].qty + '</td><td>' + perProduct[n].total.toFixed(2) + ' บาท</td></tr>';
       }).join('');
 
+    renderPaymentFilter();
+    var filteredOrders = state.selectedPaymentFilter === 'all' ? orders :
+      orders.filter(function(o){
+        var method = o.paymentMethod === 'transfer' ? 'transfer' : 'cash';
+        return method === state.selectedPaymentFilter;
+      });
+
     var hist = document.getElementById('orderHistoryBody');
-    hist.innerHTML = orders.length === 0 ? '<tr><td colspan="5" class="empty">ไม่มีออเดอร์ในวันนี้</td></tr>' :
-      orders.slice().reverse().map(function(o){
+    hist.innerHTML = filteredOrders.length === 0 ? '<tr><td colspan="6" class="empty">ไม่มีออเดอร์ในวันนี้</td></tr>' :
+      filteredOrders.slice().reverse().map(function(o){
         var itemsStr = o.items.map(function(it){
           var toppingsStr = (it.toppings && it.toppings.length) ? (' (+' + it.toppings.map(function(t){ return t.name; }).join(', ') + ')') : '';
           return it.name + toppingsStr + ' x' + it.qty;
         }).join(', ');
-        return '<tr><td>#' + o.orderNo + '</td><td>' + o.time + '</td><td>' + escapeHtml(itemsStr) + '</td><td>' + o.total.toFixed(2) + '</td>' +
+        var paymentLabel = o.paymentMethod === 'transfer' ? 'โอนเงิน' : '';
+        return '<tr><td>#' + o.orderNo + '</td><td>' + o.time + '</td><td>' + escapeHtml(itemsStr) + '</td><td>' + o.total.toFixed(2) + '</td><td>' + paymentLabel + '</td>' +
           '<td><button class="btn secondary" data-id="' + o.id + '">ดูใบเสร็จ</button></td></tr>';
       }).join('');
     hist.querySelectorAll('button[data-id]').forEach(function(btn){
@@ -1107,6 +1096,27 @@
         var order = state.orders.find(function(o){ return o.id === btn.dataset.id; });
         if(order) showReceipt(order);
       });
+    });
+  }
+
+  function renderPaymentFilter(){
+    var wrap = document.getElementById('paymentFilterRow');
+    var items = [
+      { key: 'all', label: 'ทั้งหมด' },
+      { key: 'cash', label: 'เงินสด' },
+      { key: 'transfer', label: 'โอน' }
+    ];
+    wrap.innerHTML = '';
+    items.forEach(function(item){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cat-pill' + (state.selectedPaymentFilter === item.key ? ' active' : '');
+      btn.textContent = item.label;
+      btn.addEventListener('click', function(){
+        state.selectedPaymentFilter = item.key;
+        renderSummaryView();
+      });
+      wrap.appendChild(btn);
     });
   }
 
@@ -1170,7 +1180,6 @@
 
   // ---------- SETTINGS VIEW ----------
   function renderSettingsView(){
-    document.getElementById('dailyOrderLimit').value = state.settings.dailyOrderLimit || '';
     document.getElementById('shopName').value = state.settings.shopName || '';
     var preview = document.getElementById('shopLogoPreview');
     var removeBtn = document.getElementById('removeLogoBtn');
@@ -1204,13 +1213,6 @@
     persistSettings();
     renderSettingsView();
     toast('ลบรูป QR เรียบร้อย');
-  });
-  document.getElementById('saveSettingsBtn').addEventListener('click', function(){
-    var raw = document.getElementById('dailyOrderLimit').value;
-    state.settings.dailyOrderLimit = raw === '' ? 0 : parseInt(raw, 10);
-    persistSettings();
-    toast('บันทึกการตั้งค่าเรียบร้อย');
-    renderPOS();
   });
   document.getElementById('themeColorPicker').addEventListener('input', function(e){
     var tmp = Object.assign({}, state.settings, { brandColor: e.target.value });
@@ -1258,7 +1260,7 @@
     localStorage.removeItem(LS_CATEGORIES);
     localStorage.removeItem(LS_TOPPINGS);
     state.products = [];
-    state.settings = { dailyOrderLimit: 0, shopName: 'ร้านคาเฟ่', logo: '', brandColor: '', staticQrImage: '' };
+    state.settings = { shopName: 'ร้านคาเฟ่', logo: '', brandColor: '', staticQrImage: '' };
     state.orders = [];
     state.categories = [];
     state.toppings = [];
