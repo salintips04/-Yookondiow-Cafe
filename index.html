@@ -1089,14 +1089,28 @@
         }).join(', ');
         var paymentLabel = o.paymentMethod === 'transfer' ? 'โอนเงิน' : '';
         return '<tr><td>#' + o.orderNo + '</td><td>' + o.time + '</td><td>' + escapeHtml(itemsStr) + '</td><td>' + o.total.toFixed(2) + '</td><td>' + paymentLabel + '</td>' +
-          '<td><button class="btn secondary" data-id="' + o.id + '">ดูใบเสร็จ</button></td></tr>';
+          '<td class="row" style="gap:6px;flex-wrap:nowrap;"><button class="btn secondary" data-act="view" data-id="' + o.id + '">ดูใบเสร็จ</button><button class="btn danger" data-act="del" data-id="' + o.id + '">ลบ</button></td></tr>';
       }).join('');
-    hist.querySelectorAll('button[data-id]').forEach(function(btn){
+    hist.querySelectorAll('button[data-act="view"]').forEach(function(btn){
       btn.addEventListener('click', function(){
         var order = state.orders.find(function(o){ return o.id === btn.dataset.id; });
         if(order) showReceipt(order);
       });
     });
+    hist.querySelectorAll('button[data-act="del"]').forEach(function(btn){
+      btn.addEventListener('click', function(){ deleteOrder(btn.dataset.id); });
+    });
+  }
+
+  function deleteOrder(orderId){
+    var order = state.orders.find(function(o){ return o.id === orderId; });
+    if(!order) return;
+    if(!confirm('ต้องการลบออเดอร์ #' + order.orderNo + ' (' + order.total.toFixed(2) + ' บาท) หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้')) return;
+    state.orders = state.orders.filter(function(o){ return o.id !== orderId; });
+    persistOrders();
+    renderSummaryView();
+    renderPOS();
+    toast('ลบออเดอร์เรียบร้อย');
   }
 
   function renderPaymentFilter(){
