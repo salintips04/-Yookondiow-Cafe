@@ -2,83 +2,377 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ระบบจัดการออเดอร์ร้านคาเฟ่</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#6f4e37">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
 <meta name="apple-mobile-web-app-title" content="ออเดอร์คาเฟ่">
 <style>
   :root{
-    --bg:#f7f3ee; --card:#ffffff; --ink:#3b2b23; --sub:#8a7367;
+    --bg:#f6f2ed; --card:#ffffff; --ink:#2f241e; --sub:#8a776c;
     --brand:#6f4e37; --brand-dark:#523829; --accent:#c98a3f;
-    --line:#e7ddd3; --danger:#c0392b; --ok:#2e7d4f; --warn:#b5820a;
+    --line:#ece3da; --danger:#d14334; --ok:#2e8a57; --warn:#b97f0c;
+    --brand-soft:#f3ebe3;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(60,40,20,.04),0 8px 24px rgba(60,40,20,.06);
+    --font:'IBM Plex Sans Thai','Segoe UI','Sarabun',system-ui,sans-serif;
+    --header-h:64px;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:'Segoe UI',"Sarabun",sans-serif;background:var(--bg);color:var(--ink);}
-  header{background:var(--brand);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
-  header h1{font-size:18px;margin:0;}
-  header .date{font-size:13px;opacity:.85;}
-  nav{display:flex;background:var(--brand-dark);flex-wrap:wrap;}
-  nav button{flex:1;min-width:110px;background:none;border:none;color:#fff;padding:12px 8px;cursor:pointer;font-size:14px;opacity:.75;border-bottom:3px solid transparent;}
-  nav button.active{opacity:1;border-bottom:3px solid var(--accent);font-weight:600;}
-  main{max-width:1100px;margin:0 auto;padding:16px;}
+  body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.45;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;}
+  button,input,select,textarea{font-family:inherit;}
+
+  /* ---------- header + main tabs ---------- */
+  header{position:sticky;top:0;z-index:40;min-height:var(--header-h);display:flex;align-items:center;gap:16px;padding:10px 24px;background:rgba(255,255,255,.9);-webkit-backdrop-filter:saturate(1.4) blur(12px);backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--line);}
+  header h1{display:flex;align-items:center;gap:10px;min-width:0;margin:0;font-size:17px;font-weight:700;color:var(--ink);}
+  #headerShopNameText{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .brand-mark{width:36px;height:36px;border-radius:11px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  #headerLogoImg{width:36px;height:36px;border-radius:11px;object-fit:contain;background:#fff;border:1px solid var(--line);flex-shrink:0;}
+  header .date{margin-left:auto;font-size:13px;color:var(--sub);background:var(--brand-soft);padding:6px 12px;border-radius:999px;white-space:nowrap;}
+  nav{display:flex;gap:4px;margin-left:auto;padding:4px;background:#f3eee8;border-radius:12px;}
+  nav button{display:flex;align-items:center;gap:8px;padding:8px 16px;border:none;border-radius:9px;background:none;color:var(--sub);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,box-shadow .15s;}
+  nav button:hover{color:var(--ink);}
+  nav button.active{background:#fff;color:var(--brand-dark);box-shadow:0 1px 3px rgba(60,40,20,.14);}
+  nav .ico{width:18px;height:18px;}
+  nav + .date{margin-left:0;}
+
+  main{max-width:1180px;margin:0 auto;padding:20px 24px;}
   .view{display:none;}
-  .view.active{display:block;}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px;}
-  h2{font-size:16px;margin:0 0 12px;color:var(--brand-dark);}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
-  .product-tile{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fffaf5;cursor:pointer;transition:.15s;position:relative;}
-  .product-tile:hover{border-color:var(--accent);}
-  .product-tile.disabled{opacity:.45;cursor:not-allowed;}
-  .product-tile .name{font-weight:600;font-size:14px;}
-  .product-tile .price{color:var(--brand);font-size:13px;margin-top:4px;}
-  .product-tile .stock{font-size:12px;color:var(--sub);margin-top:4px;}
-  .product-tile .stock.low{color:var(--warn);}
-  .product-tile .stock.out{color:var(--danger);}
-  .cart-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px;}
-  .cart-row .qty-ctrl{display:flex;align-items:center;gap:6px;}
-  .qty-ctrl button{width:24px;height:24px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;font-size:14px;line-height:1;}
+  .view.active{display:block;animation:fadeIn .18s ease-out;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px;box-shadow:var(--shadow);}
+  h2{font-size:17px;margin:0 0 14px;color:var(--ink);font-weight:700;}
+
+  /* ---------- order screen ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
+  .product-tile{font:inherit;color:inherit;text-align:left;width:100%;}
+  .product-tile:focus-visible,.qty-ctrl button:focus-visible,.cat-pill:focus-visible,nav button:focus-visible,.act-btn:focus-visible,.quick-cash:focus-visible{outline:3px solid rgba(201,138,63,.55);outline-offset:2px;}
+  .product-tile{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-height:100px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;user-select:none;transition:transform .12s,box-shadow .15s,border-color .15s;}
+  .product-tile:hover{border-color:var(--accent);box-shadow:0 6px 18px rgba(60,40,20,.08);transform:translateY(-1px);}
+  .product-tile:active{transform:scale(.97);}
+  .product-tile.in-cart{border-color:var(--brand);background:linear-gradient(180deg,#fff 40%,var(--brand-soft));}
+  .product-tile .name{font-weight:600;font-size:15px;line-height:1.35;}
+  .product-tile .price{align-self:flex-start;padding:3px 10px;border-radius:999px;background:var(--brand-soft);color:var(--brand-dark);font-size:13px;font-weight:600;}
+  .tile-qty{position:absolute;top:-8px;right:-8px;min-width:26px;height:26px;padding:0 7px;border-radius:999px;background:var(--brand);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(60,40,20,.3);border:2px solid #fff;}
+  .cart-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;}
+  .cart-head h2{margin:0;}
+  .count-pill{font-size:13px;font-weight:600;color:var(--brand-dark);background:var(--brand-soft);padding:3px 10px;border-radius:999px;}
+  .cart-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .cart-row .qty-ctrl{display:flex;align-items:center;gap:8px;}
+  .qty-ctrl button{width:30px;height:30px;border:none;border-radius:50%;background:var(--brand-soft);color:var(--brand-dark);font-size:17px;font-weight:700;line-height:1;cursor:pointer;transition:background .15s,color .15s;}
+  .qty-ctrl button:hover{background:var(--brand);color:#fff;}
   .totals{display:flex;justify-content:space-between;font-size:15px;padding:6px 0;}
-  .totals.grand{font-weight:700;font-size:18px;color:var(--brand-dark);border-top:2px solid var(--line);margin-top:6px;padding-top:10px;}
-  .btn{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;font-size:14px;font-weight:600;}
+  .totals.grand{font-weight:700;font-size:21px;color:var(--ink);border-top:1px dashed var(--line);margin-top:4px;padding-top:14px;}
+  .pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px;}
+  .pager:empty{display:none;}
+  .pager-info{font-size:13px;color:var(--sub);}
+  .pager-btns{display:flex;align-items:center;gap:4px;}
+  .pager-btn{min-width:36px;height:36px;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s;}
+  .pager-btn:hover:not(:disabled){border-color:var(--accent);background:#fffaf5;}
+  .pager-btn.current{background:var(--brand);border-color:var(--brand);color:#fff;}
+  .pager-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .pager-btn:focus-visible{outline:3px solid rgba(201,138,63,.55);outline-offset:2px;}
+  .pager-gap{padding:0 4px;color:var(--sub);}
+  @media (max-width: 600px){ .pager{justify-content:center;} .pager-info{width:100%;text-align:center;} }
+  .seg{display:flex;gap:4px;padding:4px;background:#f3eee8;border-radius:12px;}
+  .seg label{flex:1;cursor:pointer;}
+  .seg span{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 8px;border-radius:9px;font-size:14px;font-weight:600;color:var(--sub);transition:background .15s,color .15s,box-shadow .15s;}
+  .seg input:checked + span{background:#fff;color:var(--brand-dark);box-shadow:0 1px 3px rgba(60,40,20,.14);}
+  .seg input:focus-visible + span{outline:2px solid var(--accent);outline-offset:1px;}
+
+  /* ---------- controls ---------- */
+  .btn{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:11px 18px;cursor:pointer;font-size:14px;font-weight:600;box-shadow:0 1px 2px rgba(60,40,20,.15);transition:background .15s,transform .08s,box-shadow .15s;}
   .btn:hover{background:var(--brand-dark);}
-  .btn.secondary{background:#fff;color:var(--brand);border:1px solid var(--brand);}
+  .btn:active{transform:scale(.98);}
+  .btn:focus-visible{outline:3px solid rgba(201,138,63,.45);outline-offset:2px;}
+  .btn.secondary{background:#fff;color:var(--brand-dark);border:1px solid var(--line);box-shadow:none;}
+  .btn.secondary:hover{background:var(--brand-soft);border-color:var(--brand-soft);}
   .btn.danger{background:var(--danger);}
-  .btn:disabled{background:#ccc;cursor:not-allowed;}
+  .btn.danger:hover{background:#b23427;}
+  .btn:disabled{background:#e6dfd8;color:#a8998d;cursor:not-allowed;box-shadow:none;transform:none;}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
-  input,select{padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-size:14px;}
+  input,select{padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff;color:var(--ink);transition:border-color .15s,box-shadow .15s;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(201,138,63,.2);}
   table{width:100%;border-collapse:collapse;font-size:14px;}
-  th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);}
-  th{color:var(--sub);font-weight:600;font-size:13px;}
-  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600;}
+  th,td{text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);}
+  th{color:var(--sub);font-weight:600;font-size:12.5px;}
+  tbody tr{transition:background .12s;}
+  tbody tr:hover td{background:#fcf9f6;}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;}
   .badge.ok{background:#e5f4ec;color:var(--ok);}
   .badge.warn{background:#fdf2df;color:var(--warn);}
   .badge.danger{background:#fbe7e4;color:var(--danger);}
-  .empty{color:var(--sub);font-size:14px;padding:20px 0;text-align:center;}
-  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;}
+  .empty{color:var(--sub);font-size:14px;padding:24px 0;text-align:center;}
+
+  /* ---------- popups ---------- */
+  .modal-bg{position:fixed;inset:0;background:rgba(30,20,15,.45);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;}
   .modal-bg.active{display:flex;}
-  .modal{background:#fff;border-radius:10px;max-width:380px;width:100%;padding:0;max-height:90vh;overflow:auto;}
+  .modal{background:#fff;border-radius:20px;max-width:380px;width:100%;padding:0;max-height:90vh;overflow:auto;box-shadow:0 24px 60px rgba(30,20,15,.25);animation:pop .18s ease-out;}
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:none;}}
+  .modal h2{font-size:18px;}
   .receipt{padding:20px;font-family:'Consolas',monospace;font-size:13px;}
-  .receipt h3{text-align:center;margin:0 0 4px;font-family:'Segoe UI',sans-serif;}
+  .receipt h3{text-align:center;margin:0 0 4px;font-family:var(--font);}
   .receipt .sub{text-align:center;color:var(--sub);font-size:12px;margin-bottom:10px;}
   .receipt .line{border-top:1px dashed #999;margin:8px 0;}
   #receiptQrWrap svg{width:160px;height:160px;display:block;margin:0 auto;}
-  .cat-pill{padding:6px 14px;border-radius:20px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:13px;color:var(--ink);}
+  .cat-pill{padding:7px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink);transition:background .15s,border-color .15s,color .15s;}
+  .cat-pill:hover{border-color:var(--accent);}
   .cat-pill.active{background:var(--brand);color:#fff;border-color:var(--brand);}
-  .cat-pill-manage{display:inline-flex;align-items:center;gap:6px;padding:5px 8px 5px 14px;border-radius:20px;border:1px solid var(--line);background:#fffaf5;font-size:13px;}
+  .cat-pill-manage{display:inline-flex;align-items:center;gap:6px;padding:5px 8px 5px 14px;border-radius:999px;border:1px solid var(--line);background:#fffaf5;font-size:13px;}
   .cat-pill-manage button{border:none;background:#e7ddd3;color:var(--ink);width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;}
   .cat-pill-manage button:hover{background:var(--danger);color:#fff;}
   .receipt table{font-size:12.5px;}
   .receipt td{padding:3px 4px;border:none;}
+  .receipt tr:hover td{background:none;}
   .modal-actions{display:flex;gap:8px;padding:12px 20px 20px;}
-  .stat{display:flex;flex-direction:column;gap:2px;background:#fffaf5;border:1px solid var(--line);border-radius:8px;padding:12px;min-width:120px;}
-  .stat .label{font-size:12px;color:var(--sub);}
-  .stat .value{font-size:22px;font-weight:700;color:var(--brand-dark);}
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--brand-dark);color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;z-index:100;display:none;}
+  .modal-actions .btn{flex:1;}
+
+  /* ---------- summary + misc ---------- */
+  .stat{display:flex;flex-direction:column;gap:4px;background:var(--brand-soft);border-radius:14px;padding:14px 16px;min-width:140px;flex:1;}
+  .stat .label{font-size:12.5px;color:var(--sub);font-weight:500;}
+  .stat .value{font-size:24px;font-weight:700;color:var(--ink);letter-spacing:-.01em;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#2f241e;color:#fff;padding:12px 20px;border-radius:999px;font-size:14px;font-weight:500;box-shadow:0 10px 30px rgba(30,20,15,.3);z-index:100;display:none;max-width:calc(100% - 32px);text-align:center;}
+  .backup-banner{display:none;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#fdf4e3;border:1px solid #f1dcae;color:#8a5f08;border-radius:14px;padding:10px 14px;margin-bottom:16px;font-size:14px;}
+  .backup-banner.active{display:flex;}
+  .storage-banner{display:none;flex-direction:column;gap:4px;background:#fbe7e4;border:1px solid #efc2bb;color:#9b2c20;border-radius:14px;padding:12px 16px;margin-bottom:16px;font-size:14px;line-height:1.55;}
+  .storage-banner.active{display:flex;}
+  .storage-banner b{font-size:15px;}
+  .banner-close{border:none;background:transparent;color:var(--warn);font-size:22px;line-height:1;width:32px;height:32px;border-radius:8px;cursor:pointer;}
+  .banner-close:hover{background:#f6e3bd;}
+  .cash-box{margin-top:12px;padding:12px;border-radius:12px;background:var(--bg);}
+  .cash-box .change{font-size:20px;font-weight:700;color:var(--ok);}
+  .cash-box .change.short{color:var(--danger);}
+  .quick-cash{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink);transition:border-color .15s,background .15s;}
+  .quick-cash:hover{border-color:var(--accent);background:#fffaf5;}
+  .cart-bar{display:none;}
+  @media (max-width: 900px){ header .date{display:none;} }
+  @media (min-width: 601px) and (max-width: 760px){ nav button{padding:8px 10px;} header{gap:10px;padding:10px 16px;} }
+
+  /* ---------- settings page ---------- */
+  .ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+  .ico-lg{width:34px;height:34px;stroke-width:1.5;}
+  .settings-nav .ico{width:18px;height:18px;}
+  .set-icon{color:var(--brand);}
+  .set-icon .ico{width:22px;height:22px;}
+  .logo-avatar{color:var(--brand);}
+  .danger-zone .set-icon{color:var(--danger);}
+  .visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+  .settings-layout{display:grid;gap:16px;}
+  .settings-nav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -2px;padding:2px;}
+  .settings-nav::-webkit-scrollbar{display:none;}
+  .settings-nav a{flex-shrink:0;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:14px;white-space:nowrap;transition:background .15s,color .15s;}
+  .settings-nav a.active{background:var(--brand);border-color:var(--brand);color:#fff;}
+  .set-section{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:16px;box-shadow:var(--shadow);scroll-margin-top:calc(var(--header-h) + 16px);overflow:hidden;}
+  .set-head{display:flex;gap:14px;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);}
+  .set-head h2{margin:0;font-size:17px;color:var(--ink);}
+  .set-head p{margin:2px 0 0;font-size:13px;color:var(--sub);}
+  .set-icon{width:42px;height:42px;border-radius:12px;background:var(--brand-soft);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .set-body{padding:18px 20px;}
+  .set-block{border-top:1px solid var(--line);margin-top:18px;padding-top:18px;}
+  .set-block.first{border-top:none;margin-top:0;padding-top:0;}
+  .set-label{font-weight:600;font-size:14px;color:var(--ink);margin-bottom:2px;}
+  .set-hint{font-size:13px;color:var(--sub);margin:0 0 12px;line-height:1.55;}
+  .tag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--brand-soft);color:var(--brand-dark);font-size:11px;font-weight:600;vertical-align:1px;}
+  .media-row{display:flex;gap:18px;align-items:center;}
+  .media-info{flex:1;min-width:0;}
+  .logo-avatar{width:76px;height:76px;border-radius:20px;border:1px solid var(--line);background:var(--brand-soft);display:flex;align-items:center;justify-content:center;font-size:34px;overflow:hidden;flex-shrink:0;}
+  .logo-avatar img{width:100%;height:100%;object-fit:contain;background:#fff;}
+  .qr-tile{width:112px;height:112px;border-radius:14px;border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:12px;text-align:center;line-height:1.4;background:#fffaf5;flex-shrink:0;overflow:hidden;}
+  .qr-tile.has{border-style:solid;border-width:1px;background:#fff;}
+  .qr-tile img{width:100%;height:100%;object-fit:contain;}
+  .input-group{display:flex;gap:8px;margin-top:6px;}
+  .input-group input{flex:1;min-width:0;}
+  .btn.sm{padding:8px 14px;font-size:13px;}
+  label.btn{display:inline-flex;align-items:center;justify-content:center;}
+  input.visually-hidden:focus-visible + label, label.btn:focus-within{outline:2px solid var(--accent);outline-offset:2px;}
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px;}
+  .swatch{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px 10px;border:2px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;font-size:12px;color:var(--ink);font-family:inherit;transition:border-color .15s,background .15s;}
+  .swatch:hover{border-color:var(--accent);}
+  .swatch .dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);}
+  .swatch.active{border-color:var(--brand);background:var(--brand-soft);font-weight:600;}
+  .custom-dot{background:conic-gradient(#e25c5c,#e2b45c,#6cc070,#5cb8e2,#8a6ce2,#e25cb8,#e25c5c);position:relative;overflow:hidden;}
+  .custom-dot input[type=color]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0;}
+  .swatch.custom.active .custom-dot{background:var(--brand);}
+  .info-line{font-size:13px;color:var(--sub);margin:12px 0 0;}
+  .guide-card{display:flex;align-items:center;gap:14px;}
+  .guide-card-text{flex:1;min-width:0;}
+  .modal.guide-modal{max-width:600px;}
+  .guide-modal-head{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:12px;padding:16px 16px 12px 20px;background:#fff;border-bottom:1px solid var(--line);}
+  .guide-modal-head h2{margin:0;flex:1;}
+  .guide-modal-head .set-icon{width:38px;height:38px;}
+  .guide-modal-body{padding:8px 20px 20px;}
+  @media (max-width: 600px){ .guide-modal-body{padding:6px 16px 20px;} }
+  .guide-item{border:1px solid var(--line);border-radius:12px;margin-top:8px;background:#fff;overflow:hidden;}
+  .guide-item summary{cursor:pointer;list-style:none;padding:12px 40px 12px 14px;font-weight:600;font-size:14.5px;position:relative;}
+  .guide-item summary::-webkit-details-marker{display:none;}
+  .guide-item summary::after{content:'';position:absolute;right:16px;top:50%;width:8px;height:8px;border-right:2px solid var(--sub);border-bottom:2px solid var(--sub);transform:translateY(-70%) rotate(45deg);transition:transform .15s;}
+  .guide-item[open] summary::after{transform:translateY(-30%) rotate(-135deg);}
+  .guide-item[open] summary{background:var(--brand-soft);}
+  .guide-item summary:focus-visible{outline:3px solid rgba(201,138,63,.55);outline-offset:-3px;}
+  .guide-item ul,.guide-item ol{margin:0;padding:10px 16px 14px 34px;font-size:14px;line-height:1.7;color:var(--ink);}
+  .guide-item li + li{margin-top:4px;}
+  .danger-zone{border-color:#efcdc7;}
+  .danger-zone .set-icon{background:#fbe7e4;}
+  .danger-row{display:flex;justify-content:space-between;align-items:center;gap:16px;}
+  @media (min-width: 900px){
+    .settings-layout{grid-template-columns:220px minmax(0,1fr);align-items:start;}
+    .settings-nav{flex-direction:column;position:sticky;top:calc(var(--header-h) + 16px);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px;margin:0;box-shadow:0 1px 2px rgba(60,40,20,.04);}
+    .settings-nav a{border:none;border-radius:10px;background:none;padding:10px 12px;}
+    .settings-nav a:hover{background:#f6f0ea;}
+    .settings-nav a.active{background:var(--brand-soft);color:var(--brand-dark);font-weight:600;}
+  }
+  @media (max-width: 600px){
+    .set-section{scroll-margin-top:12px;border-radius:14px;}
+    .set-head{padding:14px 16px;}
+    .set-body{padding:16px;}
+    .media-row{gap:14px;align-items:flex-start;}
+    .logo-avatar{width:64px;height:64px;border-radius:16px;font-size:28px;}
+    .qr-tile{width:92px;height:92px;}
+    .danger-row{flex-direction:column;align-items:stretch;}
+  }
+
+  /* ---------- labelled form fields with inline errors ---------- */
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
+  .field{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--sub);}
+  .field input,.field select{width:100%;color:var(--ink);}
+  .field .req{color:var(--danger);font-weight:600;}
+  .field-hint{font-size:12px;color:var(--sub);}
+  .field-error{font-size:12px;color:var(--danger);display:none;}
+  .field.invalid input{border-color:var(--danger);background:#fdf3f2;}
+  .field.invalid .field-error{display:block;}
+  .field.invalid .field-hint{display:none;}
+  .topping-form{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fffaf5;}
+  .topping-form.editing{border-color:var(--accent);box-shadow:0 0 0 2px rgba(201,138,63,.25);}
+  .topping-group{margin-bottom:10px;}
+  .topping-group-title{font-size:12px;color:var(--sub);font-weight:600;margin:6px 0 4px;}
+  .topping-group-title.orphan{color:var(--danger);}
+  .topping-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;margin-bottom:6px;}
+  .topping-row.editing{background:#fff6ea;border-color:var(--accent);}
+  /* quiet row actions: text buttons that only show a background on hover */
+  td.act-cell{text-align:right;white-space:nowrap;padding-top:4px;padding-bottom:4px;}
+  .act-btn{background:none;border:none;padding:5px 10px;border-radius:6px;font-size:13px;font-weight:600;color:var(--brand);cursor:pointer;font-family:inherit;}
+  .act-btn:hover,.act-btn:focus-visible{background:#f3ebe3;}
+  .act-btn.danger{color:var(--danger);}
+  .act-btn.danger:hover,.act-btn.danger:focus-visible{background:#fbe7e4;}
+  .act-btn.icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;padding:0;vertical-align:middle;color:var(--sub);}
+  .act-btn.icon:hover,.act-btn.icon:focus-visible{color:var(--brand);}
+  .act-btn.icon.danger:hover,.act-btn.icon.danger:focus-visible{color:var(--danger);}
+  @media (pointer: coarse){ .act-btn{padding:8px 12px;} .act-btn.icon{width:40px;height:40px;padding:0;} }
+  #choiceModal{z-index:60;}
+  .cloud-status{font-size:14px;padding:8px 12px;border-radius:8px;background:#f4efe9;color:var(--sub);}
+  .cloud-status.ok{background:#e5f4ec;color:var(--ok);}
+  .cloud-status.warn{background:#fdf2df;color:var(--warn);}
+  .cloud-status.error{background:#fbe7e4;color:var(--danger);}
+  .setup-steps{margin-top:14px;border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:#fffaf5;}
+  .setup-steps summary{cursor:pointer;font-weight:600;color:var(--brand-dark);font-size:14px;}
+  .setup-steps ol{padding-left:22px;font-size:14px;line-height:1.7;}
+  .setup-steps code{background:#f0e8df;padding:1px 5px;border-radius:4px;}
+  .setup-notes{padding-left:20px;font-size:13px;color:var(--sub);line-height:1.6;}
+  #cloudScriptBox{width:100%;font-family:Consolas,monospace;font-size:12px;border:1px solid var(--line);border-radius:6px;padding:8px;background:#fff;resize:vertical;}
+  .snap-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;font-size:14px;}
+  .snap-row small{display:block;color:var(--sub);font-size:12px;}
+  #choiceActions .btn{width:100%;}
+  .products-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+  #openAddProductBtn{padding:10px 20px;}
+  #productTableBody td{white-space:nowrap;}
+  #productTableBody td:first-child{white-space:normal;}
+  .stack-table th{white-space:nowrap;}
+
+  /* ---------- Windows / wide screens: menu left, cart right ---------- */
+  @media (min-width: 900px){
+    main{max-width:1280px;}
+    #view-pos.active{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px;align-items:start;}
+    #view-pos .card{margin-bottom:0;}
+    #cartCard{position:sticky;top:calc(var(--header-h) + 16px);max-height:calc(100vh - var(--header-h) - 32px);overflow:auto;}
+  }
+
+  /* ---------- touch screens: bigger tap targets ---------- */
+  @media (pointer: coarse){
+    .qty-ctrl button{width:34px;height:34px;font-size:18px;}
+    .cat-pill{padding:8px 16px;}
+    .quick-cash{padding:8px 14px;}
+  }
+
+  /* ---------- phones & small tablets: wide tables become one card per row ---------- */
+  @media (max-width: 760px){
+    .stack-table thead{display:none;}
+    .stack-table tr{display:block;border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-bottom:10px;background:#fff;}
+    .stack-table tbody tr:hover td{background:none;}
+    .stack-table td,#productTableBody td{display:flex;justify-content:space-between;gap:12px;border:none;padding:4px 0;text-align:right;white-space:normal;}
+    .stack-table td::before{content:attr(data-label);color:var(--sub);font-size:13px;text-align:left;flex-shrink:0;}
+    .stack-table td.act-cell,#productTableBody td.act-cell{justify-content:flex-end;gap:4px;padding-top:6px;}
+    .stack-table td.act-cell::before{content:none;}
+    .stack-table td.empty{justify-content:center;}
+    #productTableBody td:first-child{font-weight:600;}
+  }
+
+  /* ---------- order history + product list: compact cards on small screens ---------- */
+  .pay-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:600;white-space:nowrap;}
+  .pay-pill.cash{background:#e5f4ec;color:var(--ok);}
+  .pay-pill.transfer{background:#e6eefb;color:#2c5f9e;}
+  .h-baht{display:none;}
+  @media (max-width: 760px){
+    #orderHistoryBody tr{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"no time total" "items items items" "pay pay act";column-gap:10px;row-gap:8px;align-items:center;padding:12px 14px;}
+    #orderHistoryBody td{display:block;padding:0;border:none;text-align:left;white-space:normal;}
+    #orderHistoryBody td::before{content:none;}
+    #orderHistoryBody td.empty{grid-column:1 / -1;text-align:center;padding:16px 0;}
+    #orderHistoryBody .h-no{grid-area:no;font-size:16px;font-weight:700;}
+    #orderHistoryBody .h-time{grid-area:time;font-size:13px;color:var(--sub);}
+    #orderHistoryBody .h-total{grid-area:total;font-size:17px;font-weight:700;text-align:right;white-space:nowrap;}
+    #orderHistoryBody .h-baht{display:inline;font-size:13px;font-weight:500;color:var(--sub);}
+    #orderHistoryBody .h-items{grid-area:items;font-size:14px;line-height:1.5;background:var(--bg);border-radius:10px;padding:8px 10px;}
+    #orderHistoryBody .h-pay{grid-area:pay;}
+    #orderHistoryBody td.act-cell{grid-area:act;display:flex;justify-content:flex-end;align-items:center;gap:2px;padding:0;}
+
+    #productTableBody tr{display:grid;grid-template-columns:1fr auto;grid-template-areas:"name price" "cat act";column-gap:10px;row-gap:2px;align-items:center;padding:10px 12px 8px 14px;}
+    #productTableBody td{display:block;padding:0;border:none;text-align:left;white-space:normal;}
+    #productTableBody td::before{content:none;}
+    #productTableBody td.empty{grid-column:1 / -1;text-align:center;padding:16px 0;}
+    #productTableBody .p-name{grid-area:name;font-size:15px;font-weight:600;}
+    #productTableBody .p-price{grid-area:price;font-weight:700;text-align:right;white-space:nowrap;}
+    #productTableBody .p-cat{grid-area:cat;font-size:13px;color:var(--sub);}
+    #productTableBody td.act-cell{grid-area:act;display:flex;justify-content:flex-end;gap:2px;padding:0;}
+  }
+
+  /* ---------- phones: app-style bottom tab bar, bottom-sheet popups ---------- */
+  @media (max-width: 600px){
+    /* no blur here: backdrop-filter would make the header the containing block of the fixed tab bar */
+    header{position:relative;min-height:0;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none;}
+    header h1{font-size:16px;}
+    .brand-mark,#headerLogoImg{width:32px;height:32px;border-radius:10px;}
+    nav{position:fixed;left:0;right:0;bottom:0;z-index:45;margin:0;gap:0;border-radius:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom));background:rgba(255,255,255,.95);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(60,40,20,.05);}
+    nav button{flex:1;min-width:0;flex-direction:column;gap:3px;padding:4px 2px;font-size:11.5px;border-radius:10px;}
+    nav button.active{background:none;box-shadow:none;color:var(--brand-dark);}
+    nav .ico{width:56px;height:30px;padding:5px 18px;border-radius:999px;transition:background .15s;}
+    nav button.active .ico{background:var(--brand-soft);}
+    main{padding:12px;padding-bottom:calc(92px + env(safe-area-inset-bottom));}
+    body:has(.cart-bar.active) main{padding-bottom:calc(160px + env(safe-area-inset-bottom));}
+    .card{padding:14px;border-radius:14px;}
+    /* 16px stops iPhone from zooming in when a field is tapped */
+    input,select{font-size:16px;}
+    .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+    .form-grid{grid-template-columns:1fr;}
+    #productFormCard .modal-actions .btn{flex:1;}
+    #productManageRow .btn{flex:1;}
+    .stat{flex:1 1 calc(50% - 10px);min-width:0;padding:12px 14px;}
+    .stat .value{font-size:20px;}
+    #cartCard .row:last-child .btn{flex:1;}
+
+    .modal-bg{align-items:flex-end;padding:0;}
+    .modal{max-width:none!important;border-radius:22px 22px 0 0;max-height:92vh;padding-bottom:env(safe-area-inset-bottom);animation:sheet .24s ease-out;}
+    @keyframes sheet{from{transform:translateY(40px);opacity:.4;}to{transform:none;opacity:1;}}
+
+    .cart-bar.active{display:flex;position:fixed;left:12px;right:12px;bottom:calc(74px + env(safe-area-inset-bottom));z-index:44;justify-content:space-between;align-items:center;gap:10px;background:var(--brand);color:#fff;border:none;border-radius:14px;padding:14px 18px;font-size:15px;font-weight:600;font-family:inherit;box-shadow:0 8px 24px rgba(60,40,20,.3);cursor:pointer;}
+    .cart-bar .cart-bar-left{display:flex;align-items:center;gap:8px;}
+    .toast{bottom:calc(150px + env(safe-area-inset-bottom));}
+  }
   #printRoot{display:none;}
   @media print{
     body > *:not(#printRoot){display:none!important;}
@@ -88,19 +382,49 @@
 </head>
 <body>
 
+<!-- line icons (24px grid, stroke = currentColor) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 10v10h16V10"/><path d="M2.5 10 5 4h14l2.5 6"/><path d="M2.5 10a3.17 3.17 0 0 0 6.33 0 3.17 3.17 0 0 0 6.34 0 3.17 3.17 0 0 0 6.33 0"/><path d="M10 20v-5h4v5"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3z"/><path d="M21 14v.01"/><path d="M14 21h.01"/><path d="M17.5 21H21v-3.5"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 22a10 10 0 1 1 10-10c0 2.8-2.2 4-4 4h-2.2a2 2 0 0 0-1.5 3.3A1.6 1.6 0 0 1 12 22Z"/><circle cx="7.5" cy="10.5" r="1.2"/><circle cx="12" cy="7" r="1.2"/><circle cx="16.5" cy="10.5" r="1.2"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a5 5 0 0 1-.6-9.96A7 7 0 0 1 20 10a4 4 0 0 1-1 7.9"/><path d="M12 12v9"/><path d="m8.5 15.5 3.5-3.5 3.5 3.5"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 7h14l-1 13H6Z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20h16"/><rect x="5" y="11" width="3" height="6" rx="1"/><rect x="10.5" y="6" width="3" height="11" rx="1"/><rect x="16" y="9" width="3" height="8" rx="1"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5Z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M8 7h8"/><path d="M8 11h6"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3h2.6l2.4 12.2a1.5 1.5 0 0 0 1.5 1.2h9a1.5 1.5 0 0 0 1.5-1.2L21 7H6"/></symbol>
+  <symbol id="i-coffee" viewBox="0 0 24 24"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2"/><path d="M10 2v2"/><path d="M14 2v2"/></symbol>
+</svg>
+
 <header>
-  <h1 id="headerShopName"><img id="headerLogoImg" alt="" style="display:none;height:30px;vertical-align:middle;margin-right:8px;border-radius:6px;background:#fff;object-fit:contain;"><span id="headerShopNameText">☕ ระบบจัดการออเดอร์ร้านคาเฟ่</span></h1>
+  <h1 id="headerShopName">
+    <span class="brand-mark" id="headerMark"><svg class="ico"><use href="#i-coffee"/></svg></span>
+    <img id="headerLogoImg" alt="" style="display:none;">
+    <span id="headerShopNameText">ระบบจัดการออเดอร์ร้านคาเฟ่</span>
+  </h1>
+  <nav aria-label="เมนูหลัก">
+    <button data-view="pos" class="active"><svg class="ico"><use href="#i-bag"/></svg><span>สั่งซื้อ</span></button>
+    <button data-view="products"><svg class="ico"><use href="#i-box"/></svg><span>สินค้า</span></button>
+    <button data-view="summary"><svg class="ico"><use href="#i-chart"/></svg><span>สรุปยอด</span></button>
+    <button data-view="settings"><svg class="ico"><use href="#i-gear"/></svg><span>ตั้งค่า</span></button>
+  </nav>
   <div class="date" id="headerDate"></div>
 </header>
 
-<nav>
-  <button data-view="pos" class="active">สั่งซื้อ</button>
-  <button data-view="products">สินค้า</button>
-  <button data-view="summary">สรุปยอด/ประวัติ</button>
-  <button data-view="settings">ตั้งค่า</button>
-</nav>
-
 <main>
+  <div class="storage-banner" id="storageBanner" role="alert">
+    <b>⚠ หน้านี้บันทึกข้อมูลไม่ได้</b>
+    <span id="storageBannerText"></span>
+  </div>
+  <div class="backup-banner" id="backupBanner">
+    <span id="backupBannerText"></span>
+    <span class="row" style="gap:6px;">
+      <button class="btn" id="backupNowBtn" style="padding:6px 14px;">สำรองข้อมูลตอนนี้</button>
+      <button type="button" class="banner-close" id="backupBannerClose" title="ปิด (เตือนอีกครั้งใน 3 วัน)" aria-label="ปิดการแจ้งเตือน">×</button>
+    </span>
+  </div>
 
   <!-- POS VIEW -->
   <div class="view active" id="view-pos">
@@ -109,17 +433,28 @@
       <div class="row" id="categoryFilterRow" style="margin-bottom:10px;"></div>
       <div class="grid" id="productGrid"></div>
     </div>
-    <div class="card">
-      <h2>ตะกร้าออเดอร์</h2>
+    <div class="card" id="cartCard">
+      <div class="cart-head">
+        <h2>ตะกร้าออเดอร์</h2>
+        <span class="count-pill" id="cartCount">0 รายการ</span>
+      </div>
       <div id="cartRows"><div class="empty">ยังไม่มีสินค้าในตะกร้า</div></div>
       <div class="totals grand"><span>ยอดรวม</span><span id="cartTotal">0.00 บาท</span></div>
-      <div class="row" style="margin-top:10px;">
-        <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;">
-          <input type="radio" name="paymentMethod" value="cash" checked> เงินสด
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;">
-          <input type="radio" name="paymentMethod" value="transfer"> โอน
-        </label>
+      <div class="seg" role="radiogroup" aria-label="วิธีชำระเงิน" style="margin-top:12px;">
+        <label><input type="radio" name="paymentMethod" value="cash" class="visually-hidden" checked><span>💵 เงินสด</span></label>
+        <label><input type="radio" name="paymentMethod" value="transfer" class="visually-hidden"><span>📱 โอน</span></label>
+      </div>
+      <div class="cash-box" id="cashBox">
+        <div class="row">
+          <label for="cashReceived" style="font-size:14px;">รับเงิน</label>
+          <input type="number" id="cashReceived" min="0" step="1" placeholder="0" inputmode="decimal" style="width:120px;" onfocus="this.select()">
+          <span style="font-size:14px;">บาท</span>
+          <span id="quickCashRow" class="row" style="gap:6px;"></span>
+        </div>
+        <div class="row" style="justify-content:space-between;margin-top:8px;">
+          <span style="font-size:14px;">เงินทอน</span>
+          <span class="change" id="cashChange">-</span>
+        </div>
       </div>
       <div class="row" style="margin-top:10px;justify-content:flex-end;">
         <button class="btn secondary" id="clearCartBtn">ล้างตะกร้า</button>
@@ -130,30 +465,47 @@
 
   <!-- PRODUCTS VIEW -->
   <div class="view" id="view-products">
-    <div class="card">
-      <h2>เพิ่ม/แก้ไขสินค้า</h2>
-      <div class="row">
-        <input type="hidden" id="productId">
-        <input type="text" id="productName" placeholder="ชื่อสินค้า" style="min-width:150px;">
-        <select id="productCategory" style="min-width:160px;"></select>
-        <input type="number" id="productPrice" placeholder="ราคา (บาท)" min="0" step="0.01" style="width:120px;">
-        <input type="number" id="productLimit" placeholder="จำกัด/วัน (ว่าง=ไม่จำกัด)" min="0" style="width:190px;">
-        <button class="btn" id="saveProductBtn">บันทึกสินค้า</button>
-        <button class="btn secondary" id="cancelEditBtn" style="display:none;">ยกเลิก</button>
+    <!-- PRODUCT FORM MODAL (add + edit) -->
+    <div class="modal-bg" id="productModal" role="dialog" aria-modal="true" aria-labelledby="productFormTitle">
+    <div class="modal" id="productFormCard" style="max-width:460px;">
+     <div style="padding:20px;">
+      <h2 id="productFormTitle">เพิ่มสินค้าใหม่</h2>
+      <input type="hidden" id="productId">
+      <div class="form-grid">
+        <label class="field" id="productNameField">
+          <span>ชื่อสินค้า <b class="req">*</b></span>
+          <input type="text" id="productName" placeholder="เช่น ลาเต้เย็น" maxlength="60" autocomplete="off">
+          <small class="field-error"></small>
+        </label>
+        <label class="field">
+          <span>หมวดหมู่</span>
+          <select id="productCategory"></select>
+        </label>
+        <label class="field" id="productPriceField">
+          <span>ราคา (บาท) <b class="req">*</b></span>
+          <input type="number" id="productPrice" placeholder="เช่น 55" min="0" step="0.01" inputmode="decimal">
+          <small class="field-error"></small>
+        </label>
+      </div>
+     </div>
+      <div class="modal-actions" style="justify-content:flex-end;">
+        <button class="btn secondary" id="cancelEditBtn">ยกเลิก</button>
+        <button class="btn" id="saveProductBtn">เพิ่มสินค้า</button>
       </div>
     </div>
+    </div>
+
     <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:center;">
-        <div>
-          <h2 style="margin:0;">รายการสินค้าทั้งหมด</h2>
-        </div>
-        <div class="row" style="gap:8px;">
-          <button class="btn secondary" id="openToppingManageModalBtn">จัดการท็อปปิ้ง</button>
-          <button class="btn secondary" id="openCategoryModalBtn">จัดการหมวดหมู่</button>
-        </div>
+      <div class="products-head">
+        <h2 style="margin:0;">สินค้าทั้งหมด <span id="productCount" style="color:var(--sub);font-weight:400;"></span></h2>
+        <button class="btn" id="openAddProductBtn">+ เพิ่มสินค้า</button>
       </div>
-      <table>
-        <thead><tr><th>ชื่อสินค้า</th><th>หมวดหมู่</th><th>ราคา</th><th>จำกัด/วัน</th><th>ขายวันนี้</th><th>คงเหลือวันนี้</th><th></th></tr></thead>
+      <div class="row" id="productManageRow" style="gap:8px;margin:10px 0 6px;">
+        <button class="btn secondary" id="openToppingManageModalBtn">จัดการท็อปปิ้ง</button>
+        <button class="btn secondary" id="openCategoryModalBtn">จัดการหมวดหมู่</button>
+      </div>
+      <table class="stack-table">
+        <thead><tr><th>ชื่อสินค้า</th><th>หมวดหมู่</th><th>ราคา</th><th></th></tr></thead>
         <tbody id="productTableBody"></tbody>
       </table>
     </div>
@@ -175,13 +527,14 @@
         <tbody id="productSummaryBody"></tbody>
       </table>
     </div>
-    <div class="card">
+    <div class="card" id="historyCard">
       <h2>ประวัติออเดอร์</h2>
       <div class="row" id="paymentFilterRow" style="margin-bottom:10px;"></div>
-      <table>
+      <table class="stack-table">
         <thead><tr><th>เลขที่</th><th>เวลา</th><th>รายการ</th><th>ยอดรวม</th><th>ชำระโดย</th><th></th></tr></thead>
         <tbody id="orderHistoryBody"></tbody>
       </table>
+      <div class="pager" id="historyPager" role="navigation" aria-label="หน้าประวัติออเดอร์"></div>
     </div>
     <div class="card">
       <h2>ส่งออกยอดขายรายเดือน</h2>
@@ -195,50 +548,183 @@
 
   <!-- SETTINGS VIEW -->
   <div class="view" id="view-settings">
-    <div class="card">
-      <h2>ชื่อร้านค้า</h2>
-      <p style="font-size:13px;color:var(--sub);">ชื่อร้านจะแสดงที่หัวเว็บ ชื่อแท็บเบราว์เซอร์ และหัวใบเสร็จ</p>
-      <div class="row">
-        <input type="text" id="shopName" placeholder="ชื่อร้านค้า" style="min-width:220px;" onfocus="this.select()">
-        <button class="btn" id="saveShopNameBtn">บันทึก</button>
+    <div class="settings-layout">
+      <div class="settings-nav" id="settingsNav" role="navigation" aria-label="หมวดการตั้งค่า">
+        <a href="#set-shop" class="active"><span><svg class="ico"><use href="#i-store"/></svg></span>ร้านค้า</a>
+        <a href="#set-pay"><span><svg class="ico"><use href="#i-qr"/></svg></span>รับชำระเงิน</a>
+        <a href="#set-theme"><span><svg class="ico"><use href="#i-palette"/></svg></span>ธีมสี</a>
+        <a href="#set-backup"><span><svg class="ico"><use href="#i-cloud"/></svg></span>สำรองข้อมูล</a>
+        <a href="#set-data"><span><svg class="ico"><use href="#i-database"/></svg></span>จัดการข้อมูล</a>
       </div>
-      <div class="row" style="margin-top:14px;align-items:center;">
-        <img id="shopLogoPreview" style="display:none;height:60px;width:60px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fff;padding:4px;">
-        <input type="file" id="shopLogoInput" accept="image/*">
-        <button class="btn secondary" id="removeLogoBtn" style="display:none;">ลบโลโก้</button>
-      </div>
-      <p style="font-size:12px;color:var(--sub);margin:6px 0 0;">อัปโหลดโลโก้ร้าน (jpg/png) จะแสดงแทนไอคอน ☕ ที่หัวเว็บและใบเสร็จ</p>
-    </div>
-    <div class="card">
-      <h2>รับชำระเงิน (QR code ในใบเสร็จ)</h2>
-      <p style="font-size:13px;color:var(--sub);">อัปโหลดรูปภาพ QR code พร้อมเพย์ของร้าน (ถ่ายรูปหรือแคปจากแอปธนาคาร) เพื่อแสดงในใบเสร็จทุกใบ ให้ลูกค้าสแกนจ่ายเอง</p>
-      <div class="row" style="align-items:center;">
-        <img id="staticQrPreview" style="display:none;height:100px;width:100px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fff;padding:4px;">
-        <input type="file" id="staticQrInput" accept="image/*">
-        <button class="btn secondary" id="removeStaticQrBtn" style="display:none;">ลบรูป QR</button>
-      </div>
-      <p style="font-size:12px;color:var(--sub);margin:6px 0 0;">ไม่อัปโหลด = ใบเสร็จจะไม่มี QR code</p>
-    </div>
-    <div class="card">
-      <h2>ธีมสีร้าน</h2>
-      <p style="font-size:13px;color:var(--sub);">เลือกโทนสีของเว็บให้เข้ากับร้านคุณ</p>
-      <div class="row" id="themePresets" style="gap:10px;"></div>
-      <div class="row" style="margin-top:14px;align-items:center;">
-        <label style="font-size:13px;color:var(--sub);">สีกำหนดเอง:</label>
-        <input type="color" id="themeColorPicker" style="width:50px;height:36px;padding:2px;cursor:pointer;">
-        <button class="btn secondary" id="resetThemeBtn">รีเซ็ตเป็นค่าเริ่มต้น</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>ข้อมูล</h2>
-      <p style="font-size:13px;color:var(--sub);">ข้อมูลทั้งหมดถูกเก็บไว้ในเบราว์เซอร์นี้เท่านั้น (localStorage) ไม่มีการส่งข้อมูลออกอินเทอร์เน็ต หากล้างแคช/ข้อมูลเว็บไซต์ของเบราว์เซอร์ ข้อมูลจะหายถาวร <b>แนะนำให้กด "ดาวน์โหลดข้อมูลสำรอง" เก็บไว้เป็นประจำ</b> (เช่น ทุกสิ้นวัน) เพื่อกู้คืนได้ภายหลัง</p>
-      <div class="row">
-        <button class="btn secondary" id="exportBackupBtn">ดาวน์โหลดข้อมูลสำรอง (.json)</button>
-        <button class="btn secondary" id="importBackupBtn">นำเข้าข้อมูลสำรอง</button>
-        <input type="file" id="importBackupInput" accept="application/json" style="display:none;">
-      </div>
-      <div class="row" style="margin-top:14px;">
-        <button class="btn danger" id="resetAllBtn">ล้างข้อมูลทั้งหมด</button>
+
+      <div class="settings-main">
+        <!-- SHOP -->
+        <section class="set-section" id="set-shop">
+          <div class="set-head">
+            <span class="set-icon"><svg class="ico"><use href="#i-store"/></svg></span>
+            <div><h2>ร้านค้า</h2><p>ชื่อและโลโก้ แสดงที่หัวเว็บ ชื่อแท็บ และหัวใบเสร็จ</p></div>
+          </div>
+          <div class="set-body">
+            <div class="media-row">
+              <div class="logo-avatar"><img id="shopLogoPreview" alt="โลโก้ร้าน" style="display:none;"><span id="logoPlaceholder"><svg class="ico ico-lg"><use href="#i-coffee"/></svg></span></div>
+              <div class="media-info">
+                <div class="set-label">โลโก้ร้าน</div>
+                <div class="set-hint">JPG หรือ PNG แนะนำภาพสี่เหลี่ยมจัตุรัส</div>
+                <div class="row" style="gap:6px;">
+                  <label class="btn secondary sm" for="shopLogoInput" id="shopLogoLabel">อัปโหลดโลโก้</label>
+                  <input type="file" id="shopLogoInput" accept="image/*" class="visually-hidden">
+                  <button type="button" class="act-btn danger" id="removeLogoBtn" style="display:none;">ลบโลโก้</button>
+                </div>
+              </div>
+            </div>
+            <div class="set-block">
+              <label class="field" for="shopName">
+                <span class="set-label">ชื่อร้าน</span>
+              </label>
+              <div class="input-group">
+                <input type="text" id="shopName" placeholder="เช่น ร้านกาแฟบ้านสวน" maxlength="60" onfocus="this.select()">
+                <button class="btn" id="saveShopNameBtn">บันทึก</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PAYMENT -->
+        <section class="set-section" id="set-pay">
+          <div class="set-head">
+            <span class="set-icon"><svg class="ico"><use href="#i-qr"/></svg></span>
+            <div><h2>รับชำระเงิน</h2><p>QR พร้อมเพย์ของร้าน แสดงในใบเสร็จเมื่อลูกค้าเลือกจ่ายแบบโอน</p></div>
+          </div>
+          <div class="set-body">
+            <div class="media-row">
+              <div class="qr-tile" id="qrTile">
+                <img id="staticQrPreview" alt="QR พร้อมเพย์" style="display:none;">
+                <span id="qrPlaceholder">ยังไม่มี<br>QR code</span>
+              </div>
+              <div class="media-info">
+                <div class="set-label">QR พร้อมเพย์</div>
+                <div class="set-hint">ถ่ายรูปหรือแคปหน้าจอ QR จากแอปธนาคาร ถ้าไม่อัปโหลด ใบเสร็จจะไม่มี QR</div>
+                <div class="row" style="gap:6px;">
+                  <label class="btn secondary sm" for="staticQrInput" id="staticQrLabel">อัปโหลด QR</label>
+                  <input type="file" id="staticQrInput" accept="image/*" class="visually-hidden">
+                  <button type="button" class="act-btn danger" id="removeStaticQrBtn" style="display:none;">ลบ QR</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- THEME -->
+        <section class="set-section" id="set-theme">
+          <div class="set-head">
+            <span class="set-icon"><svg class="ico"><use href="#i-palette"/></svg></span>
+            <div><h2>ธีมสี</h2><p>เลือกโทนสีให้เข้ากับร้าน</p></div>
+          </div>
+          <div class="set-body">
+            <div class="swatches">
+              <div id="themePresets" style="display:contents;"></div>
+              <label class="swatch custom" id="customSwatch" title="เลือกสีเอง">
+                <span class="dot custom-dot"><input type="color" id="themeColorPicker" aria-label="เลือกสีเอง"></span>
+                <span>กำหนดเอง</span>
+              </label>
+            </div>
+            <button type="button" class="act-btn" id="resetThemeBtn" style="margin-top:10px;">รีเซ็ตเป็นสีเริ่มต้น</button>
+          </div>
+        </section>
+
+        <!-- BACKUP -->
+        <section class="set-section" id="set-backup">
+          <div class="set-head">
+            <span class="set-icon"><svg class="ico"><use href="#i-cloud"/></svg></span>
+            <div><h2>สำรองข้อมูล</h2><p id="lastBackupInfo"></p></div>
+          </div>
+          <div class="set-body">
+            <div class="set-block first" id="cloudCard">
+              <div class="set-label">Google Drive อัตโนมัติ <span class="tag">แนะนำ</span></div>
+              <div class="set-hint">ส่งข้อมูลไปเก็บใน Google Drive ของร้านให้เอง ทุก 30 นาทีเมื่อมีออเดอร์ใหม่หรือแก้ไขข้อมูล และทันทีเมื่อปิดหรือสลับออกจากแอป ถ้าเครื่องหายหรือเสีย ก็ดึงข้อมูลกลับมาได้</div>
+        <div id="cloudStatus" class="cloud-status"></div>
+        <label class="field" id="cloudUrlField" style="margin-top:10px;">
+          <span>URL ของเว็บแอป (ได้จากขั้นตอนที่ 8 ด้านล่าง)</span>
+          <input type="url" id="cloudUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" spellcheck="false">
+          <small class="field-error"></small>
+        </label>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="cloudConnectBtn">เชื่อมต่อ</button>
+          <button class="btn secondary" id="cloudSyncNowBtn" style="display:none;">สำรองตอนนี้</button>
+          <button class="btn secondary" id="cloudRestoreBtn" style="display:none;">ดึงข้อมูลจาก Google Drive</button>
+          <button class="btn secondary" id="cloudDisconnectBtn" style="display:none;">ยกเลิกการเชื่อมต่อ</button>
+        </div>
+        <details class="setup-steps" id="cloudHelp">
+          <summary>ขั้นตอนการตั้งค่า (ทำครั้งเดียว ประมาณ 10 นาที)</summary>
+          <ol>
+            <li>เปิด <b>Google Sheets</b> (sheets.google.com) ด้วยบัญชี Google ของร้าน แล้วสร้าง<b>สเปรดชีตเปล่า</b> ตั้งชื่อ เช่น "ยอดขายร้านคาเฟ่"</li>
+            <li>ที่เมนูด้านบน กด <b>ส่วนขยาย</b> (Extensions) → <b>Apps Script</b></li>
+            <li>ลบโค้ดเดิมในหน้าต่างให้หมด แล้วกดปุ่ม <b>"คัดลอกโค้ด"</b> ด้านล่าง นำไปวาง แล้วกดไอคอน <b>บันทึก</b> 💾</li>
+            <li>กดปุ่มสีน้ำเงิน <b>การทำให้ใช้งานได้</b> (Deploy) มุมขวาบน → <b>การทำให้ใช้งานได้รายการใหม่</b> (New deployment)</li>
+            <li>กดไอคอนเฟือง ⚙ ข้าง "เลือกประเภท" → เลือก <b>เว็บแอป</b> (Web app)</li>
+            <li>ตั้งค่า <b>ดำเนินการในฐานะ</b> = <b>ฉัน</b> (Me) และ <b>ผู้มีสิทธิ์เข้าถึง</b> = <b>ทุกคน</b> (Anyone) แล้วกด <b>ทำให้ใช้งานได้</b> (Deploy)</li>
+            <li>Google จะขอสิทธิ์ ให้กด <b>ให้สิทธิ์เข้าถึง</b> → เลือกบัญชีของร้าน → ถ้าขึ้นว่า "Google ไม่ได้ยืนยันแอปนี้" ให้กด <b>ขั้นสูง</b> → <b>ไปที่ … (ไม่ปลอดภัย)</b> → <b>อนุญาต</b> (เป็นโค้ดที่ร้านสร้างเอง เก็บข้อมูลเฉพาะใน Drive ของร้าน)</li>
+            <li>คัดลอก <b>URL ของเว็บแอป</b> (ลงท้ายด้วย <code>/exec</code>) มาวางในช่องด้านบน แล้วกด <b>เชื่อมต่อ</b></li>
+          </ol>
+          <div class="row" style="justify-content:space-between;margin:8px 0 6px;">
+            <b style="font-size:13px;">โค้ดสำหรับขั้นตอนที่ 3</b>
+            <button class="btn secondary" id="copyCloudScriptBtn" style="padding:6px 14px;">คัดลอกโค้ด</button>
+          </div>
+          <textarea id="cloudScriptBox" readonly rows="8" spellcheck="false"></textarea>
+          <ul class="setup-notes">
+            <li>ไฟล์สำรองอยู่ใน Google Drive โฟลเดอร์ <b>"สำรองข้อมูลร้านคาเฟ่"</b> (ไฟล์ล่าสุด + ไฟล์รายวัน) และดูรายการออเดอร์ได้ที่แท็บ <b>"ออเดอร์"</b> ในสเปรดชีต</li>
+            <li><b>ย้ายไปเครื่องใหม่:</b> เปิดแอปในเครื่องใหม่ → วาง URL เดิม → กดเชื่อมต่อ → กด "ดึงข้อมูลจาก Google Drive"</li>
+            <li><b>อย่าแชร์ URL นี้ให้คนอื่น</b> เพราะใครมี URL จะอ่านและเขียนข้อมูลร้านได้</li>
+            <li>ถ้าไม่มีอินเทอร์เน็ต ระบบจะรอและส่งให้เองเมื่อกลับมาออนไลน์ อยากส่งทันทีกด "สำรองตอนนี้" ได้เสมอ</li>
+          </ul>
+        </details>
+            </div>
+
+            <div class="set-block">
+              <div class="set-label">สำเนาอัตโนมัติในเครื่อง</div>
+              <div class="set-hint">เก็บให้เองทุก 3 วัน และก่อนล้างข้อมูล นำเข้า หรือกู้คืน โดยเก็บเฉพาะชุดล่าสุด (สำรองใหม่แล้วลบชุดเก่าทิ้ง) ใช้กู้คืนเมื่อเผลอลบหรือกดผิด · สำเนาอยู่ในเครื่องนี้ ถ้าล้างข้อมูลเบราว์เซอร์จะหายด้วย</div>
+              <div id="snapshotList"></div>
+            </div>
+
+            <div class="set-block">
+              <div class="set-label">ไฟล์สำรอง</div>
+              <div class="set-hint">ดาวน์โหลดเก็บไว้เอง หรือนำไฟล์ที่เคยสำรองกลับเข้ามา</div>
+              <div class="row" style="gap:8px;">
+                <button class="btn secondary sm" id="exportBackupBtn">ดาวน์โหลดไฟล์สำรอง (.json)</button>
+                <button class="btn secondary sm" id="importBackupBtn">นำเข้าไฟล์สำรอง</button>
+                <input type="file" id="importBackupInput" accept="application/json" style="display:none;">
+              </div>
+              <p class="info-line" id="storagePersistInfo"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- USER GUIDE (opens a popup) -->
+        <section class="set-section" id="set-guide">
+          <div class="set-body guide-card">
+            <span class="set-icon"><svg class="ico"><use href="#i-book"/></svg></span>
+            <div class="guide-card-text">
+              <div class="set-label">คู่มือการใช้งาน</div>
+              <div class="set-hint" style="margin:0;">วิธีขาย จัดการสินค้า ดูยอด และสำรองข้อมูล</div>
+            </div>
+            <button type="button" class="btn secondary sm" id="openGuideBtn">เปิดคู่มือ</button>
+          </div>
+        </section>
+
+        <!-- DATA / DANGER -->
+        <section class="set-section danger-zone" id="set-data">
+          <div class="set-head">
+            <span class="set-icon"><svg class="ico"><use href="#i-database"/></svg></span>
+            <div><h2>จัดการข้อมูล</h2><p>ข้อมูลเก็บในเบราว์เซอร์นี้ (และใน Google Drive ของร้าน ถ้าเชื่อมต่อไว้) ไม่ส่งไปที่อื่น</p></div>
+          </div>
+          <div class="set-body danger-row">
+            <div>
+              <div class="set-label">ล้างข้อมูลทั้งหมด</div>
+              <div class="set-hint" style="margin:0;">ลบสินค้า ออเดอร์ และการตั้งค่าทั้งหมด (ระบบเก็บสำเนาไว้ก่อน กู้คืนได้)</div>
+            </div>
+            <button class="btn danger sm" id="resetAllBtn">ล้างข้อมูล</button>
+          </div>
+        </section>
       </div>
     </div>
   </div>
@@ -246,7 +732,7 @@
 </main>
 
 <!-- RECEIPT MODAL -->
-<div class="modal-bg" id="receiptModal">
+<div class="modal-bg" id="receiptModal" role="dialog" aria-modal="true" aria-label="ใบเสร็จ">
   <div class="modal">
     <div class="receipt" id="receiptContent"></div>
     <div class="modal-actions">
@@ -257,7 +743,7 @@
 </div>
 
 <!-- CATEGORY MODAL -->
-<div class="modal-bg" id="categoryModal">
+<div class="modal-bg" id="categoryModal" role="dialog" aria-modal="true" aria-label="จัดการหมวดหมู่">
   <div class="modal" style="max-width:340px;">
     <div style="padding:20px;">
       <h2 style="margin:0 0 4px;">จัดการหมวดหมู่</h2>
@@ -275,7 +761,7 @@
 </div>
 
 <!-- TOPPING SELECTION MODAL (shown when adding a product to cart) -->
-<div class="modal-bg" id="toppingModal">
+<div class="modal-bg" id="toppingModal" role="dialog" aria-modal="true" aria-labelledby="toppingModalProductName">
   <div class="modal" style="max-width:360px;">
     <div style="padding:20px;">
       <h2 id="toppingModalProductName" style="margin:0 0 4px;"></h2>
@@ -293,20 +779,38 @@
 </div>
 
 <!-- TOPPING MANAGEMENT MODAL -->
-<div class="modal-bg" id="toppingManageModal">
-  <div class="modal" style="max-width:380px;">
+<div class="modal-bg" id="toppingManageModal" role="dialog" aria-modal="true" aria-label="จัดการท็อปปิ้ง">
+  <div class="modal" style="max-width:440px;">
     <div style="padding:20px;">
       <h2 style="margin:0 0 4px;">จัดการท็อปปิ้ง</h2>
-      <p style="font-size:12px;color:var(--sub);margin:0 0 12px;">เพิ่มท็อปปิ้งพร้อมราคา และเลือกหมวดหมู่ที่จะใช้ท็อปปิ้งนี้ได้ ลูกค้าจะเห็นเฉพาะท็อปปิ้งที่ตรงกับหมวดหมู่ของสินค้านั้น</p>
-      <div class="row">
-        <input type="text" id="newToppingName" placeholder="ชื่อท็อปปิ้ง" style="flex:1;min-width:0;" onfocus="this.select()">
-        <input type="number" id="newToppingPrice" placeholder="ราคา" min="0" step="0.01" style="width:90px;" onfocus="this.select()">
+      <p style="font-size:12px;color:var(--sub);margin:0 0 12px;">ตอนขาย ระบบจะถามท็อปปิ้งเฉพาะสินค้าที่อยู่ในหมวดหมู่ที่ตรงกัน</p>
+      <div class="topping-form" id="toppingFormBox">
+        <div style="font-weight:600;color:var(--brand-dark);margin-bottom:8px;" id="toppingFormTitle">เพิ่มท็อปปิ้งใหม่</div>
+        <input type="hidden" id="toppingEditId">
+        <div class="form-grid" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr);">
+          <label class="field" id="toppingNameField">
+            <span>ชื่อท็อปปิ้ง <b class="req">*</b></span>
+            <input type="text" id="newToppingName" placeholder="เช่น ไข่มุก" maxlength="40" autocomplete="off">
+            <small class="field-error"></small>
+          </label>
+          <label class="field" id="toppingPriceField">
+            <span>ราคา (บาท) <b class="req">*</b></span>
+            <input type="number" id="newToppingPrice" placeholder="เช่น 10" min="0" step="0.01" inputmode="decimal">
+            <small class="field-error"></small>
+          </label>
+        </div>
+        <label class="field" style="margin-top:10px;">
+          <span>ใช้กับหมวดหมู่</span>
+          <select id="newToppingCategory"></select>
+          <small class="field-hint">"ทุกหมวดหมู่" = แสดงกับสินค้าทุกหมวด</small>
+        </label>
+        <div class="row" style="margin-top:10px;justify-content:flex-end;">
+          <button class="btn secondary" id="cancelToppingEditBtn" style="display:none;">ยกเลิกการแก้ไข</button>
+          <button class="btn" id="addToppingBtn">เพิ่มท็อปปิ้ง</button>
+        </div>
       </div>
-      <div class="row" style="margin-top:8px;">
-        <select id="newToppingCategory" style="flex:1;min-width:0;"></select>
-        <button class="btn" id="addToppingBtn">เพิ่ม</button>
-      </div>
-      <div id="toppingManageList" style="margin-top:12px;display:flex;flex-direction:column;gap:6px;"></div>
+      <div style="font-weight:600;color:var(--brand-dark);margin:16px 0 6px;">ท็อปปิ้งทั้งหมด <span id="toppingCount" style="color:var(--sub);font-weight:400;"></span></div>
+      <div id="toppingManageList"></div>
     </div>
     <div class="modal-actions">
       <button class="btn secondary" id="closeToppingManageModalBtn">ปิด</button>
@@ -314,9 +818,199 @@
   </div>
 </div>
 
+<!-- USER GUIDE MODAL -->
+<div class="modal-bg" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+  <div class="modal guide-modal">
+    <div class="guide-modal-head">
+      <span class="set-icon"><svg class="ico"><use href="#i-book"/></svg></span>
+      <h2 id="guideTitle">คู่มือการใช้งาน</h2>
+      <button type="button" class="act-btn icon" id="closeGuideBtn" aria-label="ปิดคู่มือ" title="ปิด"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="guide-modal-body">
+
+            <details class="guide-item">
+              <summary>📲 เปิดแอปและติดตั้งลงมือถือ</summary>
+              <ul>
+                <li>เปิดผ่าน<b>ลิงก์เว็บของร้าน (https://…)</b> เท่านั้น อย่าเปิดไฟล์ index.html จากเครื่องโดยตรง เพราะเบราว์เซอร์จะไม่บันทึกข้อมูล (แอปจะขึ้นกล่องสีแดงเตือน)</li>
+                <li><b>Android (Chrome):</b> เมนู ⋮ → "ติดตั้งแอป" หรือ "เพิ่มลงหน้าจอหลัก"</li>
+                <li><b>iPhone (Safari):</b> ปุ่มแชร์ → "เพิ่มไปยังหน้าจอโฮม" แนะนำให้ติดตั้งเสมอ เพราะ Safari อาจลบข้อมูลเว็บที่ไม่ได้เปิดนาน 7 วัน</li>
+                <li>ติดตั้งแล้ว <b>ขายได้แม้ไม่มีอินเทอร์เน็ต</b> ข้อมูลเก็บในเครื่องทันที</li>
+                <li>ข้อมูลแยกตามเครื่อง ถ้าใช้หลายเครื่อง ให้ย้ายข้อมูลผ่าน Google Drive หรือไฟล์สำรอง (ดูหัวข้อสำรองข้อมูล)</li>
+              </ul>
+            </details>
+
+            <details class="guide-item">
+              <summary>🏪 ตั้งค่าร้าน: ชื่อ โลโก้ QR และธีมสี</summary>
+              <ul>
+                <li><b>ชื่อร้าน:</b> พิมพ์แล้วกด "บันทึก" ชื่อจะแสดงที่หัวเว็บและหัวใบเสร็จ</li>
+                <li><b>โลโก้:</b> กด "อัปโหลดโลโก้" เลือกรูป JPG/PNG (แนะนำรูปสี่เหลี่ยมจัตุรัส) ระบบย่อรูปให้เอง</li>
+                <li><b>QR พร้อมเพย์:</b> แคปหน้าจอ QR จากแอปธนาคารแล้วกด "อัปโหลด QR" ใบเสร็จจะแสดง QR เมื่อเลือกจ่ายแบบ "โอน"</li>
+                <li><b>ธีมสี:</b> แตะสีที่ชอบ หรือ "กำหนดเอง" เพื่อเลือกสีเอง กด "รีเซ็ตเป็นสีเริ่มต้น" เพื่อกลับสีเดิม</li>
+              </ul>
+            </details>
+
+            <details class="guide-item">
+              <summary>📦 จัดการสินค้า หมวดหมู่ และท็อปปิ้ง</summary>
+              <ul>
+                <li><b>เพิ่มสินค้า:</b> แท็บสินค้า → "+ เพิ่มสินค้า" → ใส่ชื่อ หมวดหมู่ และราคา → "เพิ่มสินค้า" (กด Enter ก็บันทึกได้)</li>
+                <li><b>แก้ไข / ลบ:</b> แตะไอคอน ✏️ เพื่อแก้ หรือ 🗑️ เพื่อลบ (ประวัติการขายเดิมยังอยู่ครบ)</li>
+                <li><b>หมวดหมู่:</b> "จัดการหมวดหมู่" → พิมพ์ชื่อ → "เพิ่ม" กด × ที่ชื่อหมวดเพื่อลบ ถ้าหมวดมีท็อปปิ้ง ระบบจะถามว่าจะย้ายหรือลบท็อปปิ้งด้วย</li>
+                <li><b>ท็อปปิ้ง:</b> "จัดการท็อปปิ้ง" → ใส่ชื่อ ราคา และหมวดที่ใช้ได้ ("ทุกหมวดหมู่" = ใช้กับสินค้าทุกหมวด) ตอนขาย ระบบจะถามท็อปปิ้งเฉพาะสินค้าในหมวดที่ตรงกัน</li>
+                <li>ชื่อซ้ำหรือกรอกไม่ครบ ช่องจะขึ้นกรอบแดงพร้อมบอกวิธีแก้</li>
+              </ul>
+            </details>
+
+            <details class="guide-item">
+              <summary>🛍️ ขายสินค้าและออกใบเสร็จ</summary>
+              <ol>
+                <li>แท็บ <b>สั่งซื้อ</b> → แตะเมนูที่ลูกค้าสั่ง (กรองตามหมวดได้จากปุ่มด้านบน) ตัวเลขที่มุมเมนูคือจำนวนที่อยู่ในตะกร้า</li>
+                <li>ถ้าสินค้ามีท็อปปิ้ง จะมีหน้าต่างให้ติ๊กเลือก แล้วกด "เพิ่มลงตะกร้า" (ไม่ติ๊กเลยก็ได้)</li>
+                <li>ปรับจำนวนด้วยปุ่ม <b>+ / −</b> ในตะกร้า (กด − จนเหลือ 0 เพื่อเอาออก) บนมือถือแตะแถบ "ดูตะกร้า" ด้านล่างเพื่อไปที่ตะกร้า</li>
+                <li>เลือก <b>💵 เงินสด</b> หรือ <b>📱 โอน</b></li>
+                <li>ถ้าเงินสด: ใส่ "รับเงิน" หรือแตะปุ่มลัด (เช่น พอดี / 100 / 500 / 1,000) ระบบคำนวณเงินทอนให้ ถ้าเงินไม่พอจะยืนยันไม่ได้</li>
+                <li>กด <b>"ยืนยันออเดอร์ &amp; ออกใบเสร็จ"</b> → กด "พิมพ์ใบเสร็จ" ถ้าต้องการพิมพ์ หรือ "ปิด"</li>
+              </ol>
+            </details>
+
+            <details class="guide-item">
+              <summary>📊 ดูยอดขาย ประวัติ และส่งออก Excel</summary>
+              <ul>
+                <li>แท็บ <b>สรุปยอด</b> แสดงจำนวนออเดอร์ ยอดขาย แยกเงินสด/โอน และยอดแยกตามสินค้าของวันที่เลือก</li>
+                <li>เปลี่ยนวันที่จากช่องวันที่มุมขวาบน</li>
+                <li><b>ประวัติออเดอร์:</b> กรอง ทั้งหมด / เงินสด / โอน แบ่งหน้าละ 5 รายการบนมือถือ และ 10 รายการบนคอม กด "ดูใบเสร็จ" เพื่อดูหรือพิมพ์ซ้ำ</li>
+                <li><b>ลบออเดอร์:</b> แตะ 🗑️ (ใช้เมื่อคีย์ผิด) ยอดขายจะถูกหักออกทันที</li>
+                <li><b>ส่งออก Excel:</b> เลือกเดือน → กด "Excel" ได้ไฟล์ .csv เปิดใน Excel ได้ทันที มียอดรายวัน เงินสด/โอน และยอดแยกตามสินค้า</li>
+                <li>ปิดร้าน: นับเงินในลิ้นชักเทียบกับยอด <b>"เงินสด"</b> ของวันนั้น</li>
+              </ul>
+            </details>
+
+            <details class="guide-item">
+              <summary>☁️ สำรองข้อมูล ย้ายเครื่อง และกู้คืน</summary>
+              <ul>
+                <li><b>Google Drive (แนะนำ):</b> ตั้งค่าครั้งเดียวตามขั้นตอนในหัวข้อสำรองข้อมูล หลังจากนั้นระบบส่งข้อมูลขึ้น Drive ให้เองทุก 30 นาทีเมื่อมีการขาย และทันทีเมื่อปิดแอป</li>
+                <li><b>สำเนาในเครื่อง:</b> ระบบเก็บให้เองทุก 3 วัน และก่อนล้างข้อมูล นำเข้า หรือกู้คืน (เก็บเฉพาะชุดล่าสุด) กด "กู้คืน" เมื่อเผลอลบหรือกดผิด</li>
+                <li><b>ไฟล์สำรอง:</b> กด "ดาวน์โหลดไฟล์สำรอง" เก็บไว้เอง และ "นำเข้าไฟล์สำรอง" เพื่อนำกลับมา</li>
+                <li><b>ย้ายไปเครื่องใหม่:</b> เปิดแอปในเครื่องใหม่ → วาง URL Google Drive เดิม → "เชื่อมต่อ" → เลือก "ดึงข้อมูลจาก Drive มาใช้ในเครื่องนี้"</li>
+                <li>ทุกครั้งที่นำเข้าหรือกู้คืน ระบบเก็บสำเนาข้อมูลเดิมไว้ก่อนเสมอ</li>
+              </ul>
+            </details>
+
+            <details class="guide-item">
+              <summary>❓ ปัญหาที่พบบ่อย</summary>
+              <ul>
+                <li><b>กล่องสีแดง "หน้านี้บันทึกข้อมูลไม่ได้":</b> เปิดไฟล์โดยตรงหรืออยู่ในโหมดไม่ระบุตัวตน ให้เปิดผ่านลิงก์เว็บหรือแอปที่ติดตั้งไว้</li>
+                <li><b>แถบสีเหลือง "ไม่ได้สำรองข้อมูล":</b> ขึ้นเมื่อไม่ได้สำรองเกิน 7 วัน กด "สำรองข้อมูลตอนนี้" หรือกด × เพื่อปิดไว้ 3 วัน (เชื่อม Google Drive แล้วจะไม่ค่อยเห็นแถบนี้)</li>
+                <li><b>อัปเดตแอปแล้วยังเห็นแบบเดิม:</b> ปิดแล้วเปิดแอปใหม่อีกครั้งขณะต่ออินเทอร์เน็ต</li>
+                <li><b>บันทึกออเดอร์ไม่สำเร็จ:</b> ตะกร้ายังอยู่ครบ ลองกดยืนยันใหม่ ถ้ายังไม่ได้ ให้ดาวน์โหลดไฟล์สำรองแล้วเคลียร์พื้นที่เครื่อง</li>
+                <li><b>เผลอล้างข้อมูลหรือนำเข้าผิดไฟล์:</b> ตั้งค่า → สำรองข้อมูล → สำเนาอัตโนมัติในเครื่อง → กด "กู้คืน" ที่สำเนา "ก่อนล้างข้อมูล…" หรือ "ก่อนนำเข้า…"</li>
+                <li><b>ใช้คีย์บอร์ด:</b> Tab เพื่อเลื่อน, Enter เพื่อกด, Esc เพื่อปิดหน้าต่าง</li>
+              </ul>
+            </details>
+          
+    </div>
+  </div>
+</div>
+
+<!-- CHOICE MODAL (questions with more than yes/no) -->
+<div class="modal-bg" id="choiceModal" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
+  <div class="modal" style="max-width:400px;">
+    <div style="padding:20px;">
+      <h2 id="choiceTitle" style="margin:0 0 8px;"></h2>
+      <div id="choiceMessage" style="font-size:14px;line-height:1.6;white-space:pre-line;"></div>
+    </div>
+    <div class="modal-actions" id="choiceActions" style="flex-direction:column;"></div>
+  </div>
+</div>
+
 <div id="printRoot"></div>
 
-<div class="toast" id="toast"></div>
+<button type="button" class="cart-bar" id="cartBar">
+  <span class="cart-bar-left"><svg class="ico"><use href="#i-cart"/></svg><span id="cartBarCount"></span></span>
+  <span id="cartBarTotal"></span>
+</button>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Google Apps Script the shop pastes into its own spreadsheet (shown in Settings → Google Drive) -->
+<script type="text/plain" id="cloudScriptSource">// สคริปต์สำรองข้อมูลร้านคาเฟ่ (วางใน Apps Script ของ Google Sheets แล้ว Deploy เป็น Web app)
+var FOLDER_NAME = 'สำรองข้อมูลร้านคาเฟ่';
+var LATEST = 'cafe-order-backup-latest.json';
+
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var body = JSON.parse(e.postData.contents);
+    if (body.action === 'ping') return reply_({ ok: true });
+    if (body.action === 'latest') {
+      var file = findFile_(LATEST);
+      if (!file) return reply_({ ok: false, error: 'ยังไม่มีข้อมูลสำรองใน Google Drive' });
+      return reply_({ ok: true, data: JSON.parse(file.getBlob().getDataAsString()) });
+    }
+    if (body.action === 'backup') {
+      var data = body.data;
+      var json = JSON.stringify(data);
+      var old = findFile_(LATEST);
+      // ถ้าข้อมูลใหม่มีออเดอร์น้อยกว่าเดิม (เช่น หลังล้างข้อมูล) เก็บไฟล์เดิมไว้อีกชุด กันข้อมูลหาย
+      if (old) {
+        var oldText = old.getBlob().getDataAsString();
+        if ((JSON.parse(oldText).orders || []).length > (data.orders || []).length) {
+          var stamp = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'yyyy-MM-dd-HHmmss');
+          getFolder_().createFile('cafe-order-backup-before-' + stamp + '.json', oldText, 'application/json');
+        }
+      }
+      saveFile_(LATEST, json);
+      saveFile_('cafe-order-backup-' + body.date + '.json', json);
+      writeOrdersSheet_(data.orders || []);
+      return reply_({ ok: true, savedAt: new Date().toISOString() });
+    }
+    return reply_({ ok: false, error: 'คำสั่งไม่ถูกต้อง' });
+  } catch (err) {
+    return reply_({ ok: false, error: String(err) });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function doGet() {
+  return reply_({ ok: true, message: 'สคริปต์สำรองข้อมูลร้านคาเฟ่พร้อมใช้งาน' });
+}
+
+function getFolder_() {
+  var it = DriveApp.getFoldersByName(FOLDER_NAME);
+  return it.hasNext() ? it.next() : DriveApp.createFolder(FOLDER_NAME);
+}
+
+function findFile_(name) {
+  var it = getFolder_().getFilesByName(name);
+  return it.hasNext() ? it.next() : null;
+}
+
+function saveFile_(name, content) {
+  var file = findFile_(name);
+  if (file) file.setContent(content);
+  else getFolder_().createFile(name, content, 'application/json');
+}
+
+function writeOrdersSheet_(orders) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('ออเดอร์') || ss.insertSheet('ออเดอร์');
+  var rows = [['วันที่', 'เวลา', 'เลขที่', 'รายการ', 'ยอดรวม (บาท)', 'ชำระโดย']];
+  orders.forEach(function (o) {
+    var items = (o.items || []).map(function (it) {
+      var tops = (it.toppings && it.toppings.length) ? ' (+' + it.toppings.map(function (t) { return t.name; }).join(', ') + ')' : '';
+      return it.name + tops + ' x' + it.qty;
+    }).join(', ');
+    rows.push([o.date, o.time, o.orderNo, items, o.total, o.paymentMethod === 'transfer' ? 'โอน' : 'เงินสด']);
+  });
+  sheet.clearContents();
+  sheet.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
+  sheet.setFrozenRows(1);
+}
+
+function reply_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+</script>
 
 <script>
 (function(){
@@ -327,12 +1021,48 @@
   var LS_ORDERS = "cafe_orders";
   var LS_CATEGORIES = "cafe_categories";
   var LS_TOPPINGS = "cafe_toppings";
+  var LS_LAST_BACKUP = "cafe_last_backup";
+  var LS_BACKUP_SNOOZE = "cafe_backup_snooze";
+  var LS_CLOUD = "cafe_cloud";
+  // keys whose changes trigger an automatic snapshot and cloud backup
+  var DATA_KEYS = [LS_PRODUCTS, LS_SETTINGS, LS_ORDERS, LS_CATEGORIES, LS_TOPPINGS];
+
+  // Can this page store anything at all? Opening index.html straight from disk (file:/data: pages),
+  // or some private modes, block storage completely: then nothing is saved and the app must say so.
+  var storageOk = (function(){
+    try{ localStorage.setItem('__cafe_test', '1'); localStorage.removeItem('__cafe_test'); return true; }
+    catch(e){ return false; }
+  })();
+  var STORAGE_BLOCKED_MSG = 'หน้านี้บันทึกข้อมูลไม่ได้ เพราะเบราว์เซอร์ปิดการเก็บข้อมูล' +
+    (/^(file|data):$/.test(location.protocol) ? ' (เปิดไฟล์ index.html โดยตรง)' : ' (อาจเป็นโหมดไม่ระบุตัวตน)') +
+    '\nกรุณาเปิดผ่านลิงก์เว็บของร้าน (https://…) หรือแอปที่ติดตั้งไว้';
+
+  // safe wrappers: a blocked localStorage throws on every access
+  function lsGet(key){ try{ return localStorage.getItem(key); }catch(e){ return null; } }
+  function lsSet(key, val){ try{ localStorage.setItem(key, val); return true; }catch(e){ return false; } }
+  function lsRemove(key){ try{ localStorage.removeItem(key); }catch(e){} }
 
   function loadJSON(key, fallback){
     try{ var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
     catch(e){ return fallback; }
   }
-  function saveJSON(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+  var storageAlertShown = false;
+  function saveJSON(key, val){
+    try{
+      localStorage.setItem(key, JSON.stringify(val));
+      if(DATA_KEYS.indexOf(key) !== -1) onDataChanged();
+      return true;
+    }
+    catch(e){
+      if(!storageOk){
+        // the red banner already explains this; only interrupt once per visit
+        if(!storageAlertShown){ storageAlertShown = true; alert(STORAGE_BLOCKED_MSG); }
+      } else {
+        alert('บันทึกข้อมูลไม่สำเร็จ! พื้นที่เก็บข้อมูลของเบราว์เซอร์อาจเต็ม\nกรุณาดาวน์โหลดข้อมูลสำรองทันที (แท็บ "ตั้งค่า") แล้วลบรูปโลโก้/QR หรือออเดอร์เก่าที่ไม่ใช้');
+      }
+      return false;
+    }
+  }
 
   function todayStr(d){
     d = d || new Date();
@@ -340,12 +1070,22 @@
     return y+"-"+m+"-"+day;
   }
   function fmtMoney(n){ return n.toFixed(2) + " บาท"; }
+  // round to satang so 1.10 × 3 is 3.30, not 3.3000000000000003 (which would make an exact cash payment "short")
+  function roundMoney(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  // row action icons (pencil = edit, trash = delete); colour comes from the button via currentColor
+  var ICON_EDIT = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+  var ICON_TRASH = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+  function iconBtn(act, icon, label, extraClass, dataId){
+    return '<button type="button" class="act-btn icon ' + (extraClass || '') + '" data-act="' + act + '"' +
+      (dataId ? ' data-id="' + escapeHtml(dataId) + '"' : '') + ' title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '">' + icon + '</button>';
+  }
 
   var state = {
     products: loadJSON(LS_PRODUCTS, []),
     settings: loadJSON(LS_SETTINGS, { shopName: 'ร้านคาเฟ่', logo: '', brandColor: '', staticQrImage: '' }),
-    orders: loadJSON(LS_ORDERS, []),
+    orders: [], // filled by loadOrders() at startup
     categories: loadJSON(LS_CATEGORIES, []),
     toppings: loadJSON(LS_TOPPINGS, []),
     cart: [], // array of { id, productId, qty, toppings: [{id,name,price}] }
@@ -355,7 +1095,66 @@
 
   function persistProducts(){ saveJSON(LS_PRODUCTS, state.products); }
   function persistSettings(){ saveJSON(LS_SETTINGS, state.settings); }
-  function persistOrders(){ saveJSON(LS_ORDERS, state.orders); }
+  // ---------- ORDER STORAGE (IndexedDB, with localStorage as a fallback) ----------
+  var ORDERS_DB = 'cafe-order-data';
+  var ORDERS_STORE = 'kv';
+  var ordersDbPromise = null;
+  var ordersInLocalStorage = false; // true when IndexedDB is unavailable (e.g. some private modes)
+  var ordersLoaded = false;         // snapshots / cloud wait for this, so they never save an empty order list
+
+  function openOrdersDb(){
+    if(!ordersDbPromise){
+      ordersDbPromise = new Promise(function(resolve, reject){
+        if(!window.indexedDB){ reject(new Error('no indexedDB')); return; }
+        var req = indexedDB.open(ORDERS_DB, 1);
+        req.onupgradeneeded = function(){ req.result.createObjectStore(ORDERS_STORE); };
+        req.onsuccess = function(){ resolve(req.result); };
+        req.onerror = function(){ reject(req.error); };
+      });
+    }
+    return ordersDbPromise;
+  }
+  function ordersKv(mode, work){
+    return openOrdersDb().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(ORDERS_STORE, mode);
+        var req = work(tx.objectStore(ORDERS_STORE));
+        tx.oncomplete = function(){ resolve(req ? req.result : undefined); };
+        tx.onerror = function(){ reject(tx.error); };
+        tx.onabort = function(){ reject(tx.error || new Error('aborted')); };
+      });
+    });
+  }
+
+  // first run after the update moves existing orders out of localStorage
+  function loadOrders(){
+    return ordersKv('readonly', function(store){ return store.get('orders'); }).then(function(stored){
+      if(Array.isArray(stored)){
+        lsRemove(LS_ORDERS);
+        return stored;
+      }
+      var legacy = loadJSON(LS_ORDERS, []);
+      return ordersKv('readwrite', function(store){ store.put(legacy, 'orders'); }).then(function(){
+        lsRemove(LS_ORDERS);
+        return legacy;
+      });
+    }).catch(function(){
+      ordersInLocalStorage = true;
+      return loadJSON(LS_ORDERS, []);
+    });
+  }
+
+  // resolves true once the orders are safely stored, false (after telling the user) if not
+  function persistOrders(){
+    if(ordersInLocalStorage) return Promise.resolve(saveJSON(LS_ORDERS, state.orders));
+    return ordersKv('readwrite', function(store){ store.put(state.orders, 'orders'); }).then(function(){
+      onDataChanged();
+      return true;
+    }).catch(function(){
+      alert('บันทึกออเดอร์ไม่สำเร็จ! พื้นที่เก็บข้อมูลของเครื่องอาจเต็ม\nกรุณาดาวน์โหลดไฟล์สำรอง (แท็บ "ตั้งค่า") แล้วลบรูปหรือไฟล์ที่ไม่ใช้ในเครื่อง');
+      return false;
+    });
+  }
   function persistCategories(){ saveJSON(LS_CATEGORIES, state.categories); }
   function persistToppings(){ saveJSON(LS_TOPPINGS, state.toppings); }
 
@@ -373,21 +1172,11 @@
     return state.orders.filter(function(o){ return o.date === dateStr; });
   }
 
-  function soldQtyToday(productId){
-    var today = todayStr();
-    var qty = 0;
-    ordersForDate(today).forEach(function(o){
-      o.items.forEach(function(it){ if(it.productId === productId) qty += it.qty; });
-    });
-    return qty;
-  }
 
-  function remainingStock(product){
-    if(!product.dailyLimit || product.dailyLimit <= 0) return Infinity;
-    return Math.max(0, product.dailyLimit - soldQtyToday(product.id));
+  // next number = highest number today + 1, so deleting an order never causes duplicate numbers
+  function nextOrderNo(){
+    return ordersForDate(todayStr()).reduce(function(max, o){ return Math.max(max, o.orderNo || 0); }, 0) + 1;
   }
-
-  function todayOrderCount(){ return ordersForDate(todayStr()).length; }
 
   function toast(msg){
     var t = document.getElementById('toast');
@@ -409,6 +1198,7 @@
       if(btn.dataset.view === 'summary') renderSummaryView();
       if(btn.dataset.view === 'settings') renderSettingsView();
       if(btn.dataset.view === 'pos') renderPOS();
+      renderCartBar();
     });
   });
 
@@ -441,6 +1231,7 @@
     root.setProperty('--brand', brand);
     root.setProperty('--brand-dark', shadeColor(brand, -0.25));
     root.setProperty('--accent', shadeColor(brand, 0.35));
+    root.setProperty('--brand-soft', shadeColor(brand, 0.88));
     var picker = document.getElementById('themeColorPicker');
     if(picker) picker.value = brand;
     var meta = document.querySelector('meta[name="theme-color"]');
@@ -450,12 +1241,17 @@
   function renderThemePresets(){
     var wrap = document.getElementById('themePresets');
     wrap.innerHTML = '';
+    var current = (state.settings.brandColor || DEFAULT_BRAND_COLOR).toLowerCase();
+    var isPreset = THEME_PRESETS.some(function(p){ return p.color === current; });
+    document.getElementById('customSwatch').classList.toggle('active', !isPreset);
     THEME_PRESETS.forEach(function(preset){
-      var isActive = (state.settings.brandColor || DEFAULT_BRAND_COLOR) === preset.color;
+      var isActive = current === preset.color;
       var btn = document.createElement('button');
       btn.type = 'button';
-      btn.title = preset.name;
-      btn.style.cssText = 'width:36px;height:36px;border-radius:50%;border:3px solid ' + (isActive ? '#333' : '#fff') + ';box-shadow:0 0 0 1px var(--line);background:' + preset.color + ';cursor:pointer;';
+      btn.className = 'swatch' + (isActive ? ' active' : '');
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      btn.innerHTML = '<span class="dot" style="background:' + preset.color + ';">' + (isActive ? '✓' : '') + '</span><span></span>';
+      btn.lastChild.textContent = preset.name;
       btn.addEventListener('click', function(){
         state.settings.brandColor = preset.color;
         persistSettings();
@@ -474,12 +1270,12 @@
     var textEl = document.getElementById('headerShopNameText');
     if(logo){
       img.src = logo;
-      img.style.display = 'inline-block';
-      textEl.textContent = name;
+      img.style.display = 'block';
     } else {
       img.style.display = 'none';
-      textEl.textContent = '☕ ' + name;
     }
+    textEl.textContent = name;
+    document.getElementById('headerMark').style.display = logo ? 'none' : '';
     document.title = name + ' - ระบบจัดการออเดอร์';
   }
 
@@ -556,6 +1352,8 @@
   }
 
   function renderPOS(){
+    // tiles are rebuilt on every change; remember which one had keyboard focus so it keeps it
+    var focusedTile = document.activeElement && document.activeElement.classList.contains('product-tile') ? document.activeElement.dataset.productId : null;
     renderCategoryFilter();
     var grid = document.getElementById('productGrid');
     grid.innerHTML = '';
@@ -568,26 +1366,23 @@
       grid.innerHTML = '<div class="empty">ไม่มีสินค้าในหมวดหมู่นี้</div>';
     }
     visibleProducts.forEach(function(p){
-      var rem = remainingStock(p);
-      var tile = document.createElement('div');
-      tile.className = 'product-tile' + (rem <= 0 ? ' disabled' : '');
-      var stockLabel = rem === Infinity ? 'ไม่จำกัด' : (rem + ' ชิ้น');
-      var stockClass = rem === Infinity ? '' : (rem <= 0 ? 'out' : (rem <= 3 ? 'low' : ''));
+      // how many of this product are already in the cart (all topping variations)
+      var inCart = state.cart.reduce(function(s, l){ return s + (l.productId === p.id ? l.qty : 0); }, 0);
+      var tile = document.createElement('button');
+      tile.type = 'button';
+      tile.className = 'product-tile' + (inCart ? ' in-cart' : '');
+      tile.dataset.productId = p.id;
+      tile.setAttribute('aria-label', p.name + ' ' + fmtMoney(p.price) + (inCart ? ' (ในตะกร้า ' + inCart + ')' : ''));
       tile.innerHTML =
-        '<div class="name">' + escapeHtml(p.name) + '</div>' +
-        '<div class="price">' + fmtMoney(p.price) + '</div>' +
-        '<div class="stock ' + stockClass + '">คงเหลือ: ' + stockLabel + '</div>';
-      if(rem > 0){
-        tile.addEventListener('click', function(){ addToCart(p.id); });
-      }
+        '<span class="name">' + escapeHtml(p.name) + '</span>' +
+        '<span class="price">' + fmtMoney(p.price) + '</span>' +
+        (inCart ? '<span class="tile-qty" aria-hidden="true">' + inCart + '</span>' : '');
+      tile.addEventListener('click', function(){ addToCart(p.id); });
       grid.appendChild(tile);
+      if(p.id === focusedTile) tile.focus();
     });
 
     renderCart();
-  }
-
-  function cartQtyForProduct(productId){
-    return state.cart.filter(function(l){ return l.productId === productId; }).reduce(function(s, l){ return s + l.qty; }, 0);
   }
 
   function toppingsKey(toppings){
@@ -597,12 +1392,6 @@
   function addLineToCart(productId, toppings){
     var product = state.products.find(function(p){ return p.id === productId; });
     if(!product) return;
-    var rem = remainingStock(product);
-    var currentQty = cartQtyForProduct(productId);
-    if(currentQty + 1 > rem){
-      toast('สินค้า "' + product.name + '" เหลือไม่พอ (คงเหลือ ' + rem + ')');
-      return;
-    }
     var key = toppingsKey(toppings);
     var existing = state.cart.find(function(l){ return l.productId === productId && toppingsKey(l.toppings) === key; });
     if(existing){
@@ -633,18 +1422,10 @@
   function changeCartLineQty(lineId, delta){
     var line = state.cart.find(function(l){ return l.id === lineId; });
     if(!line) return;
-    var product = state.products.find(function(p){ return p.id === line.productId; });
-    if(!product) return;
     var newQty = line.qty + delta;
     if(newQty <= 0){
       state.cart = state.cart.filter(function(l){ return l.id !== lineId; });
       renderPOS();
-      return;
-    }
-    var otherQty = cartQtyForProduct(line.productId) - line.qty;
-    var rem = remainingStock(product);
-    if(otherQty + newQty > rem){
-      toast('สินค้า "' + product.name + '" เหลือไม่พอ (คงเหลือ ' + rem + ')');
       return;
     }
     line.qty = newQty;
@@ -652,22 +1433,30 @@
   }
 
   function renderCart(){
+    // drop lines whose product was deleted (or replaced by an import) while in the cart
+    state.cart = state.cart.filter(function(l){ return state.products.some(function(p){ return p.id === l.productId; }); });
     var rows = document.getElementById('cartRows');
     if(state.cart.length === 0){
       rows.innerHTML = '<div class="empty">ยังไม่มีสินค้าในตะกร้า</div>';
       document.getElementById('cartTotal').textContent = fmtMoney(0);
       document.getElementById('checkoutBtn').disabled = true;
+      document.getElementById('cashReceived').value = '';
+      renderCashBox();
+      renderCartBar();
       return;
     }
+    // keep keyboard focus on the same +/− button across the re-render
+    var active = document.activeElement;
+    var focusKey = active && active.dataset && active.dataset.lineId ? active.dataset.lineId + ':' + active.dataset.act : null;
     rows.innerHTML = '';
     var total = 0;
     state.cart.forEach(function(line){
       var product = state.products.find(function(p){ return p.id === line.productId; });
       if(!product) return;
       var toppingsSum = line.toppings.reduce(function(s, t){ return s + t.price; }, 0);
-      var unitPrice = product.price + toppingsSum;
-      var lineTotal = unitPrice * line.qty;
-      total += lineTotal;
+      var unitPrice = roundMoney(product.price + toppingsSum);
+      var lineTotal = roundMoney(unitPrice * line.qty);
+      total = roundMoney(total + lineTotal);
       var toppingsLabel = line.toppings.length
         ? ('<br><span style="color:var(--accent);font-size:12px;">+ ' + line.toppings.map(function(t){ return escapeHtml(t.name); }).join(', ') + '</span>')
         : '';
@@ -676,62 +1465,180 @@
       row.innerHTML =
         '<div>' + escapeHtml(product.name) + toppingsLabel + '<br><span style="color:var(--sub);font-size:12px;">' + fmtMoney(unitPrice) + ' x ' + line.qty + '</span></div>' +
         '<div class="qty-ctrl">' +
-          '<button data-act="minus">−</button>' +
-          '<span>' + line.qty + '</span>' +
-          '<button data-act="plus">+</button>' +
+          '<button type="button" data-act="minus" aria-label="ลดจำนวน ' + escapeHtml(product.name) + '">−</button>' +
+          '<span aria-label="จำนวน">' + line.qty + '</span>' +
+          '<button type="button" data-act="plus" aria-label="เพิ่มจำนวน ' + escapeHtml(product.name) + '">+</button>' +
           '<span style="min-width:70px;text-align:right;font-weight:600;">' + fmtMoney(lineTotal) + '</span>' +
         '</div>';
+      row.querySelectorAll('.qty-ctrl button').forEach(function(b){ b.dataset.lineId = line.id; });
       row.querySelector('[data-act="minus"]').addEventListener('click', function(){ changeCartLineQty(line.id, -1); });
       row.querySelector('[data-act="plus"]').addEventListener('click', function(){ changeCartLineQty(line.id, 1); });
       rows.appendChild(row);
     });
+    if(focusKey){
+      var parts = focusKey.split(':');
+      var again = rows.querySelector('button[data-line-id="' + parts[0] + '"][data-act="' + parts[1] + '"]');
+      if(again) again.focus();
+    }
     document.getElementById('cartTotal').textContent = fmtMoney(total);
     document.getElementById('checkoutBtn').disabled = false;
+    renderCashBox();
+    renderCartBar();
   }
+
+  // ---------- PHONE CART BAR ----------
+  // floating bar at the bottom of phones so staff can reach the cart without scrolling
+  var cartCardVisible = false;
+  function renderCartBar(){
+    var count = state.cart.reduce(function(s, l){ return s + l.qty; }, 0);
+    var onPos = document.getElementById('view-pos').classList.contains('active');
+    document.getElementById('cartBarCount').textContent = 'ดูตะกร้า (' + count + ' รายการ)';
+    document.getElementById('cartCount').textContent = count + ' รายการ';
+    document.getElementById('cartBarTotal').textContent = fmtMoney(cartTotal());
+    document.getElementById('cartBar').classList.toggle('active', count > 0 && onPos && !cartCardVisible);
+  }
+  document.getElementById('cartBar').addEventListener('click', function(){
+    document.getElementById('cartCard').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(entries){
+      cartCardVisible = entries[0].isIntersecting;
+      renderCartBar();
+    }, { threshold: 0.15 }).observe(document.getElementById('cartCard'));
+  }
+
+  // copy each column header into its cells so the phone layout can show "label: value"
+  function labelTableCells(tbody){
+    var headers = Array.prototype.map.call(tbody.closest('table').querySelectorAll('thead th'), function(th){ return th.textContent; });
+    Array.prototype.forEach.call(tbody.rows, function(tr){
+      Array.prototype.forEach.call(tr.cells, function(td, i){
+        if(td.colSpan === 1 && headers[i]) td.setAttribute('data-label', headers[i]);
+      });
+    });
+  }
+
+  // ---------- CASH / CHANGE ----------
+  function cartTotal(){
+    return state.cart.reduce(function(sum, line){
+      var product = state.products.find(function(p){ return p.id === line.productId; });
+      if(!product) return sum;
+      var toppingsSum = line.toppings.reduce(function(s, t){ return s + t.price; }, 0);
+      return roundMoney(sum + roundMoney(roundMoney(product.price + toppingsSum) * line.qty));
+    }, 0);
+  }
+
+  function selectedPaymentMethod(){
+    return document.querySelector('input[name="paymentMethod"]:checked').value;
+  }
+
+  // returns the amount entered, or null when the field is empty
+  function cashReceivedValue(){
+    var raw = document.getElementById('cashReceived').value;
+    if(raw === '') return null;
+    var n = parseFloat(raw);
+    return isNaN(n) ? null : n;
+  }
+
+  function renderCashBox(){
+    var box = document.getElementById('cashBox');
+    var total = cartTotal();
+    box.style.display = (state.cart.length > 0 && selectedPaymentMethod() === 'cash') ? 'block' : 'none';
+
+    // quick buttons: exact amount, then common notes that cover the total
+    var amounts = [total, Math.ceil(total / 100) * 100, 500, 1000].filter(function(v, i, arr){
+      return v >= total && arr.indexOf(v) === i;
+    });
+    var quick = document.getElementById('quickCashRow');
+    quick.innerHTML = '';
+    amounts.forEach(function(v, i){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'quick-cash';
+      btn.textContent = i === 0 ? 'พอดี' : v.toLocaleString('th-TH');
+      btn.addEventListener('click', function(){
+        document.getElementById('cashReceived').value = v;
+        renderCashChange();
+      });
+      quick.appendChild(btn);
+    });
+    renderCashChange();
+  }
+
+  function renderCashChange(){
+    var el = document.getElementById('cashChange');
+    var received = cashReceivedValue();
+    var total = cartTotal();
+    el.classList.remove('short');
+    if(received === null){ el.textContent = '-'; return; }
+    if(received < total){
+      el.classList.add('short');
+      el.textContent = 'ขาดอีก ' + fmtMoney(roundMoney(total - received));
+      return;
+    }
+    el.textContent = fmtMoney(roundMoney(received - total));
+  }
+
+  document.getElementById('cashReceived').addEventListener('input', renderCashChange);
+  document.querySelectorAll('input[name="paymentMethod"]').forEach(function(radio){
+    radio.addEventListener('change', renderCashBox);
+  });
 
   document.getElementById('clearCartBtn').addEventListener('click', function(){
     state.cart = [];
     renderPOS();
   });
 
+  var checkoutBusy = false;
   document.getElementById('checkoutBtn').addEventListener('click', function(){
-    if(state.cart.length === 0) return;
-
-    // re-validate stock at checkout time
-    var productIds = state.cart.map(function(l){ return l.productId; }).filter(function(v, i, arr){ return arr.indexOf(v) === i; });
-    for(var i=0;i<productIds.length;i++){
-      var product = state.products.find(function(p){ return p.id === productIds[i]; });
-      var rem = remainingStock(product);
-      var totalQty = cartQtyForProduct(productIds[i]);
-      if(totalQty > rem){
-        toast('สินค้า "' + product.name + '" เหลือไม่พอสำหรับออเดอร์นี้');
-        return;
-      }
-    }
+    if(state.cart.length === 0 || checkoutBusy) return;
 
     var items = state.cart.map(function(line){
       var product = state.products.find(function(p){ return p.id === line.productId; });
       var toppingsSum = line.toppings.reduce(function(s, t){ return s + t.price; }, 0);
-      return { productId: line.productId, name: product.name, price: product.price + toppingsSum, toppings: line.toppings, qty: line.qty };
+      return { productId: line.productId, name: product.name, price: roundMoney(product.price + toppingsSum), toppings: line.toppings, qty: line.qty };
     });
-    var total = items.reduce(function(sum, it){ return sum + it.price * it.qty; }, 0);
-    var paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    var total = items.reduce(function(sum, it){ return roundMoney(sum + roundMoney(it.price * it.qty)); }, 0);
+    var paymentMethod = selectedPaymentMethod();
+    var cashReceived = paymentMethod === 'cash' ? cashReceivedValue() : null;
+    if(cashReceived !== null) cashReceived = roundMoney(cashReceived);
+    if(cashReceived !== null && cashReceived < total){
+      toast('รับเงินไม่พอ ขาดอีก ' + fmtMoney(roundMoney(total - cashReceived)));
+      document.getElementById('cashReceived').focus();
+      return;
+    }
 
     var order = {
       id: uid(),
-      orderNo: todayOrderCount() + 1,
+      orderNo: nextOrderNo(),
       date: todayStr(),
       time: new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}),
       items: items,
       total: total,
       paymentMethod: paymentMethod
     };
+    if(cashReceived !== null){
+      order.cashReceived = cashReceived;
+      order.change = roundMoney(cashReceived - total);
+    }
+    // only clear the cart and print once the order is really saved; otherwise keep everything as it was
+    checkoutBusy = true;
+    var btn = document.getElementById('checkoutBtn');
+    btn.disabled = true;
     state.orders.push(order);
-    persistOrders();
-    state.cart = [];
-    renderPOS();
-    document.querySelector('input[name="paymentMethod"][value="cash"]').checked = true;
-    showReceipt(order);
+    persistOrders().then(function(saved){
+      checkoutBusy = false;
+      if(!saved){
+        state.orders = state.orders.filter(function(o){ return o.id !== order.id; });
+        btn.disabled = false;
+        toast('บันทึกออเดอร์ไม่สำเร็จ ตะกร้ายังอยู่ครบ ลองใหม่อีกครั้ง');
+        return;
+      }
+      renderBackupStatus();
+      state.cart = [];
+      renderPOS();
+      document.querySelector('input[name="paymentMethod"][value="cash"]').checked = true;
+      showReceipt(order);
+    });
   });
 
   // ---------- RECEIPT ----------
@@ -742,17 +1649,22 @@
       return '<tr><td>' + escapeHtml(it.name + toppingsStr) + '</td><td style="text-align:center;">x' + it.qty + '</td><td style="text-align:right;">' + (it.price*it.qty).toFixed(2) + '</td></tr>';
     }).join('');
     var logoHtml = state.settings.logo
-      ? '<div style="text-align:center;margin-bottom:6px;"><img src="' + state.settings.logo + '" style="max-height:60px;max-width:160px;"></div>'
+      ? '<div style="text-align:center;margin-bottom:6px;"><img src="' + escapeHtml(state.settings.logo) + '" style="max-height:60px;max-width:160px;"></div>'
       : '';
     el.innerHTML =
       logoHtml +
       '<h3>' + (state.settings.logo ? '' : '☕ ') + escapeHtml(state.settings.shopName || 'ร้านคาเฟ่') + '</h3>' +
       '<div class="sub" style="margin-bottom:2px;">ใบเสร็จรับเงิน</div>' +
-      '<div class="sub">ออเดอร์ #' + order.orderNo + ' &nbsp;|&nbsp; ' + order.date + ' ' + order.time + '</div>' +
+      '<div class="sub">ออเดอร์ #' + escapeHtml(order.orderNo) + ' &nbsp;|&nbsp; ' + escapeHtml(order.date) + ' ' + escapeHtml(order.time) + '</div>' +
       '<div class="line"></div>' +
       '<table>' + rowsHtml + '</table>' +
       '<div class="line"></div>' +
-      '<table><tr><td style="font-weight:700;">รวมทั้งสิ้น</td><td></td><td style="text-align:right;font-weight:700;">' + order.total.toFixed(2) + ' บาท</td></tr></table>' +
+      '<table><tr><td style="font-weight:700;">รวมทั้งสิ้น</td><td></td><td style="text-align:right;font-weight:700;">' + order.total.toFixed(2) + ' บาท</td></tr>' +
+      (typeof order.cashReceived === 'number'
+        ? '<tr><td>รับเงินสด</td><td></td><td style="text-align:right;">' + order.cashReceived.toFixed(2) + ' บาท</td></tr>' +
+          '<tr><td>เงินทอน</td><td></td><td style="text-align:right;">' + order.change.toFixed(2) + ' บาท</td></tr>'
+        : '') +
+      '</table>' +
       (order.paymentMethod === 'transfer' ? '<div class="sub" style="margin-top:8px;">ชำระโดย: โอนเงิน</div>' : '') +
       '<div id="receiptQrWrap"></div>' +
       '<div class="sub" style="margin-top:10px;">ขอบคุณที่ใช้บริการค่ะ/ครับ</div>';
@@ -760,7 +1672,7 @@
     var qrWrap = document.getElementById('receiptQrWrap');
     if(order.paymentMethod === 'transfer' && state.settings.staticQrImage){
       qrWrap.innerHTML = '<div class="line"></div><div class="sub" style="margin:8px 0 4px;">สแกนจ่ายด้วย PromptPay</div>' +
-        '<img src="' + state.settings.staticQrImage + '" style="max-width:200px;max-height:200px;display:block;margin:0 auto;border-radius:6px;">';
+        '<img src="' + escapeHtml(state.settings.staticQrImage) + '" style="max-width:200px;max-height:200px;display:block;margin:0 auto;border-radius:6px;">';
     }
     document.getElementById('receiptModal').classList.add('active');
   }
@@ -810,10 +1722,10 @@
     var product = state.products.find(function(p){ return p.id === toppingModalProductId; });
     if(!product) return;
     var ids = getSelectedToppingIds();
-    var sum = product.price + ids.reduce(function(s, id){
+    var sum = roundMoney(product.price + ids.reduce(function(s, id){
       var t = state.toppings.find(function(x){ return x.id === id; });
       return s + (t ? t.price : 0);
-    }, 0);
+    }, 0));
     document.getElementById('toppingModalTotal').textContent = fmtMoney(sum);
   }
 
@@ -832,69 +1744,264 @@
     document.getElementById('toppingModal').classList.remove('active');
   });
 
-  function renderToppingCategoryOptions(){
+  // extraCategory keeps a deleted category selectable while editing a topping that still uses it
+  function renderToppingCategoryOptions(extraCategory){
     var select = document.getElementById('newToppingCategory');
+    var current = select.value;
     var categories = getCategories();
     var options = ['<option value="">ทุกหมวดหมู่</option>'].concat(
       categories.map(function(c){ return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; })
     );
+    if(extraCategory && categories.indexOf(extraCategory) === -1){
+      options.push('<option value="' + escapeHtml(extraCategory) + '">' + escapeHtml(extraCategory) + ' (หมวดนี้ถูกลบแล้ว)</option>');
+    }
     select.innerHTML = options.join('');
+    select.value = current;
+    if(select.selectedIndex === -1) select.value = '';
   }
 
   function renderToppingManage(){
-    renderToppingCategoryOptions();
+    var editingId = document.getElementById('toppingEditId').value;
+    var editing = state.toppings.find(function(t){ return t.id === editingId; });
+    renderToppingCategoryOptions(editing ? editing.category : '');
+    document.getElementById('toppingCount').textContent = '(' + state.toppings.length + ' รายการ)';
     var wrap = document.getElementById('toppingManageList');
     if(state.toppings.length === 0){
-      wrap.innerHTML = '<div class="empty" style="padding:4px 0;">ยังไม่มีท็อปปิ้ง</div>';
+      wrap.innerHTML = '<div class="empty" style="padding:4px 0;">ยังไม่มีท็อปปิ้ง กรอกด้านบนแล้วกด "เพิ่มท็อปปิ้ง"</div>';
       return;
     }
-    wrap.innerHTML = '';
+    // group: "all categories" first, then each category, then toppings whose category was deleted
+    var categories = getCategories();
+    var groups = [{ key: '', title: 'ทุกหมวดหมู่', orphan: false }].concat(
+      categories.map(function(c){ return { key: c, title: c, orphan: false }; })
+    );
     state.toppings.forEach(function(t){
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;';
-      var span = document.createElement('span');
-      span.textContent = t.name + ' — ' + fmtMoney(t.price) + ' (' + (t.category || 'ทุกหมวดหมู่') + ')';
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn danger';
-      btn.style.cssText = 'padding:4px 10px;font-size:12px;';
-      btn.textContent = 'ลบ';
-      btn.addEventListener('click', function(){ deleteTopping(t.id); });
-      row.appendChild(span);
-      row.appendChild(btn);
-      wrap.appendChild(row);
+      var cat = t.category || '';
+      if(cat && categories.indexOf(cat) === -1 && !groups.some(function(g){ return g.key === cat; })){
+        groups.push({ key: cat, title: cat + ' — หมวดนี้ถูกลบแล้ว จะไม่แสดงตอนขาย (กดแก้ไขเพื่อย้ายหมวด)', orphan: true });
+      }
+    });
+    wrap.innerHTML = '';
+    groups.forEach(function(g){
+      var items = state.toppings.filter(function(t){ return (t.category || '') === g.key; })
+        .sort(function(a, b){ return a.name.localeCompare(b.name, 'th'); });
+      if(items.length === 0) return;
+      var box = document.createElement('div');
+      box.className = 'topping-group';
+      var title = document.createElement('div');
+      title.className = 'topping-group-title' + (g.orphan ? ' orphan' : '');
+      title.textContent = g.title + ' (' + items.length + ')';
+      box.appendChild(title);
+      items.forEach(function(t){
+        var row = document.createElement('div');
+        row.className = 'topping-row' + (t.id === editingId ? ' editing' : '');
+        row.innerHTML = '<span></span><span class="row" style="gap:6px;flex-wrap:nowrap;">' +
+          iconBtn('edit', ICON_EDIT, 'แก้ไข "' + t.name + '"') + iconBtn('del', ICON_TRASH, 'ลบ "' + t.name + '"', 'danger') + '</span>';
+        row.firstChild.textContent = t.name + ' — ' + fmtMoney(t.price);
+        row.querySelector('[data-act="edit"]').addEventListener('click', function(){ editTopping(t.id); });
+        row.querySelector('[data-act="del"]').addEventListener('click', function(){ deleteTopping(t.id); });
+        box.appendChild(row);
+      });
+      wrap.appendChild(box);
     });
   }
 
-  function deleteTopping(id){
-    if(!confirm('ต้องการลบท็อปปิ้งนี้หรือไม่?')) return;
-    state.toppings = state.toppings.filter(function(t){ return t.id !== id; });
-    persistToppings();
+  function editTopping(id){
+    var t = state.toppings.find(function(x){ return x.id === id; });
+    if(!t) return;
+    document.getElementById('toppingEditId').value = t.id;
+    document.getElementById('newToppingName').value = t.name;
+    document.getElementById('newToppingPrice').value = t.price;
+    clearFieldErrors('#toppingFormBox');
+    document.getElementById('toppingFormTitle').textContent = 'แก้ไขท็อปปิ้ง: ' + t.name;
+    document.getElementById('addToppingBtn').textContent = 'บันทึกการแก้ไข';
+    document.getElementById('cancelToppingEditBtn').style.display = 'inline-block';
+    document.getElementById('toppingFormBox').classList.add('editing');
     renderToppingManage();
-    toast('ลบท็อปปิ้งเรียบร้อย');
+    document.getElementById('newToppingCategory').value = t.category || '';
+    document.getElementById('toppingFormBox').scrollIntoView({behavior:'smooth', block:'nearest'});
+    document.getElementById('newToppingName').focus({preventScroll:true});
+  }
+
+  function resetToppingForm(){
+    document.getElementById('toppingEditId').value = '';
+    document.getElementById('newToppingName').value = '';
+    document.getElementById('newToppingPrice').value = '';
+    document.getElementById('newToppingCategory').value = '';
+    clearFieldErrors('#toppingFormBox');
+    document.getElementById('toppingFormTitle').textContent = 'เพิ่มท็อปปิ้งใหม่';
+    document.getElementById('addToppingBtn').textContent = 'เพิ่มท็อปปิ้ง';
+    document.getElementById('cancelToppingEditBtn').style.display = 'none';
+    document.getElementById('toppingFormBox').classList.remove('editing');
+  }
+
+  function deleteTopping(id){
+    var t = state.toppings.find(function(x){ return x.id === id; });
+    if(!t) return;
+    if(!confirm('ต้องการลบท็อปปิ้ง "' + t.name + '" (' + fmtMoney(t.price) + ') หรือไม่?')) return;
+    state.toppings = state.toppings.filter(function(x){ return x.id !== id; });
+    persistToppings();
+    if(document.getElementById('toppingEditId').value === id) resetToppingForm();
+    renderToppingManage();
+    toast('ลบท็อปปิ้ง "' + t.name + '" เรียบร้อย');
   }
 
   document.getElementById('addToppingBtn').addEventListener('click', function(){
+    var id = document.getElementById('toppingEditId').value;
     var name = document.getElementById('newToppingName').value.trim();
-    var price = parseFloat(document.getElementById('newToppingPrice').value);
+    var priceInput = document.getElementById('newToppingPrice');
+    var price = roundMoney(parseFloat(priceInput.value));
     var category = document.getElementById('newToppingCategory').value;
-    if(!name){ toast('กรุณากรอกชื่อท็อปปิ้ง'); return; }
-    if(isNaN(price) || price < 0){ toast('กรุณากรอกราคาที่ถูกต้อง'); return; }
-    state.toppings.push({ id: uid(), name: name, price: price, category: category });
+
+    clearFieldErrors('#toppingFormBox');
+    var firstBad = null;
+    if(!name){
+      setFieldError('toppingNameField', 'กรุณากรอกชื่อท็อปปิ้ง');
+      firstBad = firstBad || 'newToppingName';
+    } else if(state.toppings.some(function(t){ return t.id !== id && (t.category || '') === category && t.name.trim().toLowerCase() === name.toLowerCase(); })){
+      setFieldError('toppingNameField', 'มี "' + name + '" ในหมวด ' + (category || 'ทุกหมวดหมู่') + ' อยู่แล้ว');
+      firstBad = firstBad || 'newToppingName';
+    }
+    if(priceInput.value === '' && !priceInput.validity.badInput){
+      setFieldError('toppingPriceField', 'กรุณากรอกราคา (ใส่ 0 ถ้าฟรี)');
+      firstBad = firstBad || 'newToppingPrice';
+    } else if(isNaN(price) || price < 0){
+      setFieldError('toppingPriceField', 'ต้องเป็นตัวเลข 0 ขึ้นไป');
+      firstBad = firstBad || 'newToppingPrice';
+    }
+    if(firstBad){ document.getElementById(firstBad).focus(); return; }
+
+    var t = id ? state.toppings.find(function(x){ return x.id === id; }) : null;
+    if(t){
+      t.name = name; t.price = price; t.category = category;
+    } else {
+      state.toppings.push({ id: uid(), name: name, price: price, category: category });
+    }
     persistToppings();
-    document.getElementById('newToppingName').value = '';
-    document.getElementById('newToppingPrice').value = '';
+    resetToppingForm();
     renderToppingManage();
-    toast('เพิ่มท็อปปิ้งเรียบร้อย');
+    toast(t ? 'บันทึกการแก้ไข "' + name + '" เรียบร้อย' : 'เพิ่มท็อปปิ้ง "' + name + '" เรียบร้อย');
+    document.getElementById('newToppingName').focus();
+  });
+  document.getElementById('cancelToppingEditBtn').addEventListener('click', function(){
+    resetToppingForm();
+    renderToppingManage();
+  });
+  document.querySelectorAll('#toppingFormBox .field input').forEach(function(input){
+    input.addEventListener('input', function(){ input.closest('.field').classList.remove('invalid'); });
+    input.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('addToppingBtn').click(); }
+    });
   });
 
+  function closeToppingManage(){
+    document.getElementById('toppingManageModal').classList.remove('active');
+    resetToppingForm();
+  }
   document.getElementById('openToppingManageModalBtn').addEventListener('click', function(){
+    resetToppingForm();
     renderToppingManage();
     document.getElementById('toppingManageModal').classList.add('active');
+    document.getElementById('newToppingName').focus();
   });
-  document.getElementById('closeToppingManageModalBtn').addEventListener('click', function(){
-    document.getElementById('toppingManageModal').classList.remove('active');
+  document.getElementById('closeToppingManageModalBtn').addEventListener('click', closeToppingManage);
+
+  // ---------- DIALOGS: focus, Tab trap, Escape ----------
+  // Escape presses the popup's own safe button, so closing always goes through the normal cancel logic
+  var DIALOG_CLOSE_BUTTON = {
+    receiptModal: 'closeReceiptBtn',
+    categoryModal: 'closeCategoryModalBtn',
+    toppingModal: 'cancelToppingModalBtn',
+    toppingManageModal: 'closeToppingManageModalBtn',
+    guideModal: 'closeGuideBtn',
+    productModal: 'cancelEditBtn'
+  };
+  var dialogReturnFocus = {};
+  var FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+  function topDialog(){
+    var choice = document.getElementById('choiceModal');
+    if(choice.classList.contains('active')) return choice;   // always drawn above the others
+    var open = document.querySelectorAll('.modal-bg.active');
+    return open.length ? open[open.length - 1] : null;
+  }
+  function focusables(dialog){
+    return Array.prototype.filter.call(dialog.querySelectorAll(FOCUSABLE), function(el){ return el.offsetParent !== null; });
+  }
+
+  document.querySelectorAll('.modal-bg').forEach(function(dialog){
+    new MutationObserver(function(){
+      var isOpen = dialog.classList.contains('active');
+      if(isOpen && !dialogReturnFocus[dialog.id]){
+        dialogReturnFocus[dialog.id] = document.activeElement;
+        // let the opener finish (it may focus a field itself), then make sure focus is inside
+        setTimeout(function(){
+          if(!dialog.contains(document.activeElement)){
+            var first = focusables(dialog)[0];
+            if(first) first.focus();
+          }
+        }, 0);
+      } else if(!isOpen && dialogReturnFocus[dialog.id]){
+        var back = dialogReturnFocus[dialog.id];
+        delete dialogReturnFocus[dialog.id];
+        if(back && document.contains(back) && back.focus) back.focus();
+      }
+    }).observe(dialog, { attributes: true, attributeFilter: ['class'] });
   });
+
+  document.addEventListener('keydown', function(e){
+    var dialog = topDialog();
+    if(!dialog) return;
+    if(e.key === 'Escape'){
+      e.preventDefault();
+      if(dialog.id === 'choiceModal'){
+        var choices = dialog.querySelectorAll('#choiceActions button');
+        if(choices.length) choices[choices.length - 1].click();   // the last choice is always the safe "cancel"
+      } else if(DIALOG_CLOSE_BUTTON[dialog.id]){
+        document.getElementById(DIALOG_CLOSE_BUTTON[dialog.id]).click();
+      }
+      return;
+    }
+    if(e.key === 'Tab'){
+      var items = focusables(dialog);
+      if(items.length === 0) return;
+      var first = items[0], last = items[items.length - 1];
+      if(!dialog.contains(document.activeElement)){ e.preventDefault(); first.focus(); }
+      else if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    }
+  });
+
+  // ---------- USER GUIDE POPUP ----------
+  document.getElementById('openGuideBtn').addEventListener('click', function(){
+    var modal = document.getElementById('guideModal');
+    modal.classList.add('active');
+    modal.querySelector('.modal').scrollTop = 0;
+  });
+  document.getElementById('closeGuideBtn').addEventListener('click', function(){
+    document.getElementById('guideModal').classList.remove('active');
+  });
+
+  // ---------- CHOICE MODAL ----------
+  // choices: [{ label, className, onPick }]; the last choice should be the safe "cancel"
+  function showChoice(title, message, choices){
+    document.getElementById('choiceTitle').textContent = title;
+    document.getElementById('choiceMessage').textContent = message;
+    var actions = document.getElementById('choiceActions');
+    actions.innerHTML = '';
+    choices.forEach(function(c){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn ' + (c.className || '');
+      btn.textContent = c.label;
+      btn.addEventListener('click', function(){
+        document.getElementById('choiceModal').classList.remove('active');
+        if(c.onPick) c.onPick();
+      });
+      actions.appendChild(btn);
+    });
+    document.getElementById('choiceModal').classList.add('active');
+  }
   document.getElementById('printReceiptBtn').addEventListener('click', function(){
     document.getElementById('printRoot').innerHTML = document.getElementById('receiptContent').innerHTML;
     window.print();
@@ -904,12 +2011,18 @@
   });
 
   // ---------- PRODUCTS VIEW ----------
-  function renderProductCategorySelect(){
+  // extraCategory keeps a product's category selectable even if it is no longer in the category list,
+  // so editing that product doesn't silently clear its category
+  function renderProductCategorySelect(extraCategory){
     var select = document.getElementById('productCategory');
-    var current = select.value;
+    var current = extraCategory !== undefined ? extraCategory : select.value;
+    var categories = getCategories();
     var options = ['<option value="">ไม่มีหมวดหมู่</option>'].concat(
-      getCategories().map(function(c){ return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; })
+      categories.map(function(c){ return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; })
     );
+    if(current && categories.indexOf(current) === -1){
+      options.push('<option value="' + escapeHtml(current) + '">' + escapeHtml(current) + ' (ไม่อยู่ในรายการหมวดหมู่)</option>');
+    }
     select.innerHTML = options.join('');
     select.value = current;
   }
@@ -933,7 +2046,31 @@
   }
 
   function deleteCategory(name){
-    if(!confirm('ต้องการลบหมวดหมู่ "' + name + '" หรือไม่? สินค้าที่เคยอยู่หมวดนี้จะกลายเป็น "ไม่มีหมวดหมู่"')) return;
+    var linked = state.toppings.filter(function(t){ return t.category === name; });
+    if(linked.length === 0){
+      if(!confirm('ต้องการลบหมวดหมู่ "' + name + '" หรือไม่? สินค้าที่เคยอยู่หมวดนี้จะกลายเป็น "ไม่มีหมวดหมู่"')) return;
+      removeCategory(name, null);
+      return;
+    }
+    var names = linked.map(function(t){ return t.name; }).join(', ');
+    showChoice('ลบหมวดหมู่ "' + name + '"',
+      'สินค้าในหมวดนี้จะกลายเป็น "ไม่มีหมวดหมู่"\nและมีท็อปปิ้ง ' + linked.length + ' รายการที่ใช้กับหมวดนี้: ' + names + '\nต้องการจัดการท็อปปิ้งเหล่านี้อย่างไร?',
+      [
+        { label: 'ลบหมวด และย้ายท็อปปิ้งไป "ทุกหมวดหมู่"', onPick: function(){ removeCategory(name, 'move'); } },
+        { label: 'ลบหมวด และลบท็อปปิ้งเหล่านี้ด้วย', className: 'danger', onPick: function(){ removeCategory(name, 'delete'); } },
+        { label: 'ยกเลิก', className: 'secondary' }
+      ]);
+  }
+
+  // toppingAction: 'move' → topping applies to all categories, 'delete' → remove it, null → none linked
+  function removeCategory(name, toppingAction){
+    if(toppingAction === 'move'){
+      state.toppings.forEach(function(t){ if(t.category === name) t.category = ''; });
+      persistToppings();
+    } else if(toppingAction === 'delete'){
+      state.toppings = state.toppings.filter(function(t){ return t.category !== name; });
+      persistToppings();
+    }
     state.categories = state.categories.filter(function(c){ return c !== name; });
     persistCategories();
     state.products.forEach(function(p){
@@ -943,7 +2080,8 @@
     if(state.selectedCategory === name) state.selectedCategory = 'all';
     renderProductsView();
     renderPOS();
-    toast('ลบหมวดหมู่เรียบร้อย');
+    toast('ลบหมวดหมู่ "' + name + '" เรียบร้อย' +
+      (toppingAction === 'move' ? ' (ย้ายท็อปปิ้งไปทุกหมวดหมู่แล้ว)' : toppingAction === 'delete' ? ' (ลบท็อปปิ้งแล้ว)' : ''));
   }
 
   document.getElementById('addCategoryBtn').addEventListener('click', function(){
@@ -963,26 +2101,23 @@
     renderCategoryManage();
     var tbody = document.getElementById('productTableBody');
     tbody.innerHTML = '';
+    document.getElementById('productCount').textContent = '(' + state.products.length + ' รายการ)';
     if(state.products.length === 0){
-      tbody.innerHTML = '<tr><td colspan="7" class="empty">ยังไม่มีสินค้า</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="empty">ยังไม่มีสินค้า กดปุ่ม "+ เพิ่มสินค้า" เพื่อเริ่ม</td></tr>';
       return;
     }
     state.products.forEach(function(p){
-      var sold = soldQtyToday(p.id);
-      var rem = remainingStock(p);
       var tr = document.createElement('tr');
       tr.innerHTML =
-        '<td>' + escapeHtml(p.name) + '</td>' +
-        '<td>' + escapeHtml(p.category || '-') + '</td>' +
-        '<td>' + fmtMoney(p.price) + '</td>' +
-        '<td>' + (p.dailyLimit && p.dailyLimit > 0 ? p.dailyLimit : 'ไม่จำกัด') + '</td>' +
-        '<td>' + sold + '</td>' +
-        '<td>' + (rem === Infinity ? 'ไม่จำกัด' : rem) + '</td>' +
-        '<td class="row" style="gap:6px;"><button class="btn secondary" data-act="edit">แก้ไข</button><button class="btn danger" data-act="del">ลบ</button></td>';
+        '<td class="p-name">' + escapeHtml(p.name) + '</td>' +
+        '<td class="p-cat">' + escapeHtml(p.category || '-') + '</td>' +
+        '<td class="p-price">' + fmtMoney(p.price) + '</td>' +
+        '<td class="act-cell">' + iconBtn('edit', ICON_EDIT, 'แก้ไข "' + p.name + '"') + iconBtn('del', ICON_TRASH, 'ลบ "' + p.name + '"', 'danger') + '</td>';
       tr.querySelector('[data-act="edit"]').addEventListener('click', function(){ editProduct(p.id); });
       tr.querySelector('[data-act="del"]').addEventListener('click', function(){ deleteProduct(p.id); });
       tbody.appendChild(tr);
     });
+    labelTableCells(tbody);
   }
 
   function editProduct(id){
@@ -990,58 +2125,132 @@
     if(!p) return;
     document.getElementById('productId').value = p.id;
     document.getElementById('productName').value = p.name;
-    document.getElementById('productCategory').value = p.category || '';
+    renderProductCategorySelect(p.category || '');
     document.getElementById('productPrice').value = p.price;
-    document.getElementById('productLimit').value = p.dailyLimit || '';
-    document.getElementById('cancelEditBtn').style.display = 'inline-block';
-    document.getElementById('view-products').scrollIntoView({behavior:'smooth'});
+    clearProductErrors();
+    document.getElementById('productFormTitle').textContent = 'แก้ไขสินค้า: ' + p.name;
+    document.getElementById('saveProductBtn').textContent = 'บันทึกการแก้ไข';
+    openProductModal();
   }
+
+  function openProductModal(){
+    document.getElementById('productModal').classList.add('active');
+    document.getElementById('productName').focus();
+  }
+  function closeProductModal(){
+    document.getElementById('productModal').classList.remove('active');
+    resetProductForm();
+  }
+  document.getElementById('openAddProductBtn').addEventListener('click', function(){
+    resetProductForm();
+    openProductModal();
+  });
 
   function deleteProduct(id){
-    if(!confirm('ต้องการลบสินค้านี้หรือไม่?')) return;
-    state.products = state.products.filter(function(p){ return p.id !== id; });
+    var p = state.products.find(function(x){ return x.id === id; });
+    if(!p) return;
+    if(!confirm('ต้องการลบสินค้า "' + p.name + '" หรือไม่?\n(ประวัติการขายเดิมยังอยู่ครบ)')) return;
+    state.products = state.products.filter(function(x){ return x.id !== id; });
     persistProducts();
+    // the product being edited is gone, so leave edit mode instead of saving into nothing
+    if(document.getElementById('productId').value === id) resetProductForm();
     renderProductsView();
     renderPOS();
+    toast('ลบสินค้า "' + p.name + '" เรียบร้อย');
   }
 
-  document.getElementById('cancelEditBtn').addEventListener('click', resetProductForm);
+  document.getElementById('cancelEditBtn').addEventListener('click', closeProductModal);
   function resetProductForm(){
     document.getElementById('productId').value = '';
     document.getElementById('productName').value = '';
     document.getElementById('productCategory').value = '';
     document.getElementById('productPrice').value = '';
-    document.getElementById('productLimit').value = '';
-    document.getElementById('cancelEditBtn').style.display = 'none';
+    clearProductErrors();
+    document.getElementById('productFormTitle').textContent = 'เพิ่มสินค้าใหม่';
+    document.getElementById('saveProductBtn').textContent = 'เพิ่มสินค้า';
   }
+
+  // ---------- inline field errors ----------
+  function setFieldError(fieldId, msg){
+    var field = document.getElementById(fieldId);
+    field.classList.add('invalid');
+    field.querySelector('.field-error').textContent = msg;
+  }
+  function clearFieldErrors(containerSelector){
+    document.querySelectorAll(containerSelector + ' .field.invalid').forEach(function(f){ f.classList.remove('invalid'); });
+  }
+  function clearProductErrors(){ clearFieldErrors('#productFormCard'); }
+  document.querySelectorAll('#productFormCard .field input').forEach(function(input){
+    input.addEventListener('input', function(){ input.closest('.field').classList.remove('invalid'); });
+    input.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('saveProductBtn').click(); }
+    });
+  });
 
   document.getElementById('saveProductBtn').addEventListener('click', function(){
     var id = document.getElementById('productId').value;
     var name = document.getElementById('productName').value.trim();
     var category = document.getElementById('productCategory').value.trim();
-    var price = parseFloat(document.getElementById('productPrice').value);
-    var limitRaw = document.getElementById('productLimit').value;
-    var limit = limitRaw === '' ? 0 : parseInt(limitRaw, 10);
+    var priceInput = document.getElementById('productPrice');
+    var price = roundMoney(parseFloat(priceInput.value));
 
-    if(!name){ toast('กรุณากรอกชื่อสินค้า'); return; }
-    if(isNaN(price) || price < 0){ toast('กรุณากรอกราคาที่ถูกต้อง'); return; }
+    // number inputs report '' for text they cannot parse, so check validity too
+    clearProductErrors();
+    var firstBad = null;
+    if(!name){
+      setFieldError('productNameField', 'กรุณากรอกชื่อสินค้า');
+      firstBad = firstBad || 'productName';
+    } else if(state.products.some(function(x){ return x.id !== id && x.name.trim().toLowerCase() === name.toLowerCase(); })){
+      setFieldError('productNameField', 'มีสินค้าชื่อ "' + name + '" อยู่แล้ว กรุณาใช้ชื่ออื่น');
+      firstBad = firstBad || 'productName';
+    }
+    if(priceInput.value === '' && !priceInput.validity.badInput){
+      setFieldError('productPriceField', 'กรุณากรอกราคา');
+      firstBad = firstBad || 'productPrice';
+    } else if(isNaN(price) || price < 0){
+      setFieldError('productPriceField', 'ราคาต้องเป็นตัวเลข 0 ขึ้นไป');
+      firstBad = firstBad || 'productPrice';
+    }
+    if(firstBad){
+      document.getElementById(firstBad).focus();
+      toast('กรุณาแก้ไขช่องที่มีกรอบสีแดง');
+      return;
+    }
 
-    if(id){
-      var p = state.products.find(function(x){ return x.id === id; });
-      p.name = name; p.category = category; p.price = price; p.dailyLimit = limit;
+    var p = id ? state.products.find(function(x){ return x.id === id; }) : null;
+    if(id && !p){
+      closeProductModal();
+      renderProductsView();
+      toast('สินค้านี้ถูกลบไปแล้ว กรุณาเพิ่มเป็นสินค้าใหม่');
+      return;
+    }
+    if(p){
+      p.name = name; p.category = category; p.price = price;
     } else {
-      state.products.push({ id: uid(), name: name, category: category, price: price, dailyLimit: limit });
+      state.products.push({ id: uid(), name: name, category: category, price: price });
     }
     addCategoryIfNew(category);
     persistProducts();
-    resetProductForm();
+    closeProductModal();
     renderProductsView();
     renderPOS();
-    toast('บันทึกสินค้าเรียบร้อย');
+    toast(p ? 'บันทึกการแก้ไข "' + name + '" เรียบร้อย' : 'เพิ่มสินค้า "' + name + '" เรียบร้อย');
   });
 
   // ---------- SUMMARY VIEW ----------
-  document.getElementById('summaryDate').addEventListener('change', renderSummaryView);
+  document.getElementById('summaryDate').addEventListener('change', function(){
+    historyPage = 1;
+    renderSummaryView();
+  });
+
+  // older orders without paymentMethod count as cash, same as the history filter
+  function paymentSplit(orders){
+    return orders.reduce(function(acc, o){
+      if(o.paymentMethod === 'transfer'){ acc.transfer += o.total; acc.transferCount++; }
+      else { acc.cash += o.total; acc.cashCount++; }
+      return acc;
+    }, { cash: 0, transfer: 0, cashCount: 0, transferCount: 0 });
+  }
 
   function renderSummaryView(){
     var dateInput = document.getElementById('summaryDate');
@@ -1052,10 +2261,13 @@
     var orders = ordersForDate(date);
 
     var revenue = orders.reduce(function(s,o){ return s + o.total; }, 0);
+    var split = paymentSplit(orders);
 
     document.getElementById('summaryStats').innerHTML =
       '<div class="stat"><div class="label">จำนวนออเดอร์</div><div class="value">' + orders.length + '</div></div>' +
       '<div class="stat"><div class="label">ยอดขายรวม</div><div class="value">' + revenue.toFixed(2) + '</div></div>' +
+      '<div class="stat"><div class="label">เงินสด (' + split.cashCount + ' ออเดอร์)</div><div class="value">' + split.cash.toFixed(2) + '</div></div>' +
+      '<div class="stat"><div class="label">โอน (' + split.transferCount + ' ออเดอร์)</div><div class="value">' + split.transfer.toFixed(2) + '</div></div>' +
       '<div class="stat"><div class="label">จำนวนสินค้าที่ขายได้</div><div class="value">' + orders.reduce(function(s,o){ return s + o.items.reduce(function(a,it){return a+it.qty;},0); },0) + '</div></div>';
 
     var perProduct = {};
@@ -1080,17 +2292,29 @@
         return method === state.selectedPaymentFilter;
       });
 
+    // newest first, HISTORY_PAGE_SIZE per page
+    var newestFirst = filteredOrders.slice().reverse();
+    var totalPages = Math.max(1, Math.ceil(newestFirst.length / HISTORY_PAGE_SIZE));
+    historyPage = Math.min(Math.max(1, historyPage), totalPages);
+    var pageStart = (historyPage - 1) * HISTORY_PAGE_SIZE;
+    var pageOrders = newestFirst.slice(pageStart, pageStart + HISTORY_PAGE_SIZE);
+    renderHistoryPager(newestFirst.length, totalPages, pageStart, pageOrders.length);
+
     var hist = document.getElementById('orderHistoryBody');
     hist.innerHTML = filteredOrders.length === 0 ? '<tr><td colspan="6" class="empty">ไม่มีออเดอร์ในวันนี้</td></tr>' :
-      filteredOrders.slice().reverse().map(function(o){
+      pageOrders.map(function(o){
         var itemsStr = o.items.map(function(it){
           var toppingsStr = (it.toppings && it.toppings.length) ? (' (+' + it.toppings.map(function(t){ return t.name; }).join(', ') + ')') : '';
           return it.name + toppingsStr + ' x' + it.qty;
         }).join(', ');
-        var paymentLabel = o.paymentMethod === 'transfer' ? 'โอนเงิน' : '';
-        return '<tr><td>#' + o.orderNo + '</td><td>' + o.time + '</td><td>' + escapeHtml(itemsStr) + '</td><td>' + o.total.toFixed(2) + '</td><td>' + paymentLabel + '</td>' +
-          '<td class="row" style="gap:6px;flex-wrap:nowrap;"><button class="btn secondary" data-act="view" data-id="' + o.id + '">ดูใบเสร็จ</button><button class="btn danger" data-act="del" data-id="' + o.id + '">ลบ</button></td></tr>';
+        var paymentLabel = o.paymentMethod === 'transfer'
+          ? '<span class="pay-pill transfer">โอนเงิน</span>' : '<span class="pay-pill cash">เงินสด</span>';
+        return '<tr><td class="h-no">#' + escapeHtml(o.orderNo) + '</td><td class="h-time">' + escapeHtml(o.time) + '</td>' +
+          '<td class="h-items">' + escapeHtml(itemsStr) + '</td><td class="h-total">' + o.total.toFixed(2) + '<span class="h-baht"> บาท</span></td>' +
+          '<td class="h-pay">' + paymentLabel + '</td>' +
+          '<td class="act-cell"><button class="act-btn" data-act="view" data-id="' + escapeHtml(o.id) + '">ดูใบเสร็จ</button>' + iconBtn('del', ICON_TRASH, 'ลบออเดอร์ #' + o.orderNo, 'danger', o.id) + '</td></tr>';
       }).join('');
+    labelTableCells(hist);
     hist.querySelectorAll('button[data-act="view"]').forEach(function(btn){
       btn.addEventListener('click', function(){
         var order = state.orders.find(function(o){ return o.id === btn.dataset.id; });
@@ -1099,6 +2323,59 @@
     });
     hist.querySelectorAll('button[data-act="del"]').forEach(function(btn){
       btn.addEventListener('click', function(){ deleteOrder(btn.dataset.id); });
+    });
+  }
+
+  // ---------- order history paging ----------
+  // 5 per page on phones (cards are tall), 10 on larger screens
+  var phoneQuery = window.matchMedia('(max-width: 600px)');
+  var HISTORY_PAGE_SIZE = phoneQuery.matches ? 5 : 10;
+  var historyPage = 1;
+  var onPhoneChange = function(){
+    // keep the first order on screen visible when the page size changes (e.g. rotating a tablet)
+    var firstIndex = (historyPage - 1) * HISTORY_PAGE_SIZE;
+    HISTORY_PAGE_SIZE = phoneQuery.matches ? 5 : 10;
+    historyPage = Math.floor(firstIndex / HISTORY_PAGE_SIZE) + 1;
+    if(document.getElementById('view-summary').classList.contains('active')) renderSummaryView();
+  };
+  if(phoneQuery.addEventListener) phoneQuery.addEventListener('change', onPhoneChange);
+  else if(phoneQuery.addListener) phoneQuery.addListener(onPhoneChange);
+
+  // page numbers to show: first, last, and the current page with one neighbour each side ("…" for gaps)
+  function historyPageList(current, total){
+    var pages = [];
+    for(var p = 1; p <= total; p++){
+      if(p === 1 || p === total || Math.abs(p - current) <= 1) pages.push(p);
+      else if(pages[pages.length - 1] !== '…') pages.push('…');
+    }
+    return pages;
+  }
+
+  function renderHistoryPager(count, totalPages, start, shown){
+    var pager = document.getElementById('historyPager');
+    if(count === 0){ pager.innerHTML = ''; return; }
+    var info = '<span class="pager-info">แสดง ' + (start + 1) + '–' + (start + shown) + ' จาก ' + count + ' ออเดอร์</span>';
+    if(totalPages <= 1){ pager.innerHTML = info; return; }
+    var btn = function(label, page, opts){
+      opts = opts || {};
+      return '<button type="button" class="pager-btn' + (opts.current ? ' current' : '') + '" data-page="' + page + '"' +
+        (opts.disabled ? ' disabled' : '') + (opts.current ? ' aria-current="page"' : '') +
+        ' aria-label="' + (opts.aria || ('หน้า ' + page)) + '">' + label + '</button>';
+    };
+    var nums = historyPageList(historyPage, totalPages).map(function(p){
+      return p === '…' ? '<span class="pager-gap">…</span>' : btn(p, p, { current: p === historyPage });
+    }).join('');
+    pager.innerHTML = info + '<div class="pager-btns">' +
+      btn('‹', historyPage - 1, { disabled: historyPage === 1, aria: 'หน้าก่อนหน้า' }) + nums +
+      btn('›', historyPage + 1, { disabled: historyPage === totalPages, aria: 'หน้าถัดไป' }) + '</div>';
+    pager.querySelectorAll('button[data-page]').forEach(function(b){
+      b.addEventListener('click', function(){
+        historyPage = parseInt(b.dataset.page, 10);
+        renderSummaryView();
+        document.getElementById('historyCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        var again = document.querySelector('#historyPager .pager-btn.current');
+        if(again) again.focus({ preventScroll: true });
+      });
     });
   }
 
@@ -1128,6 +2405,7 @@
       btn.textContent = item.label;
       btn.addEventListener('click', function(){
         state.selectedPaymentFilter = item.key;
+        historyPage = 1;
         renderSummaryView();
       });
       wrap.appendChild(btn);
@@ -1150,15 +2428,18 @@
     var daysInMonth = new Date(year, month, 0).getDate();
 
     var rows = [];
-    rows.push(['วันที่', 'จำนวนออเดอร์', 'ยอดขายรวม (บาท)', 'จำนวนสินค้าที่ขาย']);
-    var totalOrders = 0, totalRevenue = 0, totalItems = 0;
+    rows.push(['วันที่', 'จำนวนออเดอร์', 'ยอดขายรวม (บาท)', 'เงินสด (บาท)', 'โอน (บาท)', 'จำนวนสินค้าที่ขาย']);
+    var totalOrders = 0, totalRevenue = 0, totalItems = 0, totalCash = 0, totalTransfer = 0;
     var perProductMonth = {};
     for(var d = 1; d <= daysInMonth; d++){
       var dateStr = year + '-' + String(month).padStart(2, '0') + '-' + String(d).padStart(2, '0');
       var dayOrders = ordersForDate(dateStr);
       var dayRevenue = dayOrders.reduce(function(s, o){ return s + o.total; }, 0);
       var dayItems = dayOrders.reduce(function(s, o){ return s + o.items.reduce(function(a, it){ return a + it.qty; }, 0); }, 0);
-      rows.push([dateStr, dayOrders.length, dayRevenue.toFixed(2), dayItems]);
+      var daySplit = paymentSplit(dayOrders);
+      rows.push([dateStr, dayOrders.length, dayRevenue.toFixed(2), daySplit.cash.toFixed(2), daySplit.transfer.toFixed(2), dayItems]);
+      totalCash += daySplit.cash;
+      totalTransfer += daySplit.transfer;
       totalOrders += dayOrders.length;
       totalRevenue += dayRevenue;
       totalItems += dayItems;
@@ -1170,7 +2451,7 @@
         });
       });
     }
-    rows.push(['รวมทั้งเดือน', totalOrders, totalRevenue.toFixed(2), totalItems]);
+    rows.push(['รวมทั้งเดือน', totalOrders, totalRevenue.toFixed(2), totalCash.toFixed(2), totalTransfer.toFixed(2), totalItems]);
     rows.push([]);
     rows.push(['สรุปยอดขายแยกตามสินค้า (ทั้งเดือน)']);
     rows.push(['สินค้า', 'จำนวนที่ขาย', 'ยอดขาย (บาท)']);
@@ -1194,29 +2475,47 @@
 
   // ---------- SETTINGS VIEW ----------
   function renderSettingsView(){
+    renderCloudStatus();
+    renderSnapshotList();
     document.getElementById('shopName').value = state.settings.shopName || '';
+    var hasLogo = !!state.settings.logo;
     var preview = document.getElementById('shopLogoPreview');
-    var removeBtn = document.getElementById('removeLogoBtn');
-    if(state.settings.logo){
-      preview.src = state.settings.logo;
-      preview.style.display = 'inline-block';
-      removeBtn.style.display = 'inline-block';
-    } else {
-      preview.style.display = 'none';
-      removeBtn.style.display = 'none';
-    }
+    if(hasLogo) preview.src = state.settings.logo;
+    preview.style.display = hasLogo ? 'block' : 'none';
+    document.getElementById('logoPlaceholder').style.display = hasLogo ? 'none' : '';
+    document.getElementById('removeLogoBtn').style.display = hasLogo ? '' : 'none';
+    document.getElementById('shopLogoLabel').textContent = hasLogo ? 'เปลี่ยนโลโก้' : 'อัปโหลดโลโก้';
     renderThemePresets();
     document.getElementById('themeColorPicker').value = state.settings.brandColor || DEFAULT_BRAND_COLOR;
+    var hasQr = !!state.settings.staticQrImage;
     var qrPreview = document.getElementById('staticQrPreview');
-    var removeQrBtn = document.getElementById('removeStaticQrBtn');
-    if(state.settings.staticQrImage){
-      qrPreview.src = state.settings.staticQrImage;
-      qrPreview.style.display = 'inline-block';
-      removeQrBtn.style.display = 'inline-block';
-    } else {
-      qrPreview.style.display = 'none';
-      removeQrBtn.style.display = 'none';
-    }
+    if(hasQr) qrPreview.src = state.settings.staticQrImage;
+    qrPreview.style.display = hasQr ? 'block' : 'none';
+    document.getElementById('qrPlaceholder').style.display = hasQr ? 'none' : '';
+    document.getElementById('qrTile').classList.toggle('has', hasQr);
+    document.getElementById('removeStaticQrBtn').style.display = hasQr ? '' : 'none';
+    document.getElementById('staticQrLabel').textContent = hasQr ? 'เปลี่ยน QR' : 'อัปโหลด QR';
+  }
+
+  // section menu: jump to a section, and highlight the one currently on screen
+  var settingsNavLinks = document.querySelectorAll('#settingsNav a');
+  function setActiveSettingsLink(id){
+    settingsNavLinks.forEach(function(a){ a.classList.toggle('active', a.getAttribute('href') === '#' + id); });
+  }
+  settingsNavLinks.forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      var id = a.getAttribute('href').slice(1);
+      setActiveSettingsLink(id);
+      document.getElementById(id).scrollIntoView({behavior:'smooth', block:'start'});
+      a.scrollIntoView({block:'nearest', inline:'nearest'});
+    });
+  });
+  if('IntersectionObserver' in window){
+    var settingsSectionObserver = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){ if(entry.isIntersecting) setActiveSettingsLink(entry.target.id); });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    document.querySelectorAll('.set-section').forEach(function(s){ settingsSectionObserver.observe(s); });
   }
   document.getElementById('staticQrInput').addEventListener('change', function(e){
     handleStaticQrFile(e.target.files[0]);
@@ -1234,6 +2533,7 @@
     document.documentElement.style.setProperty('--brand', brand);
     document.documentElement.style.setProperty('--brand-dark', shadeColor(brand, -0.25));
     document.documentElement.style.setProperty('--accent', shadeColor(brand, 0.35));
+    document.documentElement.style.setProperty('--brand-soft', shadeColor(brand, 0.88));
   });
   document.getElementById('themeColorPicker').addEventListener('change', function(e){
     state.settings.brandColor = e.target.value;
@@ -1267,15 +2567,19 @@
     toast('บันทึกชื่อร้านเรียบร้อย');
   });
   document.getElementById('resetAllBtn').addEventListener('click', function(){
-    if(!confirm('ต้องการล้างข้อมูลทั้งหมด (สินค้า, ออเดอร์, การตั้งค่า) หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้')) return;
-    localStorage.removeItem(LS_PRODUCTS);
-    localStorage.removeItem(LS_SETTINGS);
-    localStorage.removeItem(LS_ORDERS);
-    localStorage.removeItem(LS_CATEGORIES);
-    localStorage.removeItem(LS_TOPPINGS);
+    if(!confirm('ต้องการล้างข้อมูลทั้งหมด (สินค้า, ออเดอร์, การตั้งค่า) หรือไม่?\n(ระบบจะเก็บสำเนาไว้ในรายการสำรองอัตโนมัติ กู้คืนได้จากหน้าตั้งค่า)')) return;
+    withSafetyCopy('before-reset', 'ล้างข้อมูล', resetAllData);
+  });
+  function resetAllData(){
+    lsRemove(LS_PRODUCTS);
+    lsRemove(LS_SETTINGS);
+    lsRemove(LS_ORDERS);
+    lsRemove(LS_CATEGORIES);
+    lsRemove(LS_TOPPINGS);
     state.products = [];
     state.settings = { shopName: 'ร้านคาเฟ่', logo: '', brandColor: '', staticQrImage: '' };
     state.orders = [];
+    persistOrders();
     state.categories = [];
     state.toppings = [];
     state.cart = [];
@@ -1284,11 +2588,13 @@
     renderPOS();
     renderProductsView();
     renderSettingsView();
+    renderBackupStatus();
     toast('ล้างข้อมูลเรียบร้อย');
-  });
+  }
 
-  document.getElementById('exportBackupBtn').addEventListener('click', function(){
-    var backup = {
+  // ---------- BACKUP DATA (shared by file export, auto snapshots and cloud) ----------
+  function buildBackup(){
+    return {
       appVersion: 1,
       exportedAt: new Date().toISOString(),
       products: state.products,
@@ -1297,7 +2603,100 @@
       categories: state.categories,
       toppings: state.toppings
     };
-    var blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  }
+  // Validates and normalises a backup from a file, a snapshot or the cloud.
+  // Returns { ok:true, data } with clean copies, or { ok:false, error } and nothing is applied,
+  // so one malformed entry can never be saved and crash the app on every load.
+  function sanitizeBackup(raw){
+    var bad = { product: 0, order: 0, topping: 0 };
+    var str = function(v, max){ return typeof v === 'string' ? v.slice(0, max) : (typeof v === 'number' && isFinite(v) ? String(v) : null); };
+    var num = function(v){ var n = (typeof v === 'string' && v.trim() !== '') ? Number(v) : v; return (typeof n === 'number' && isFinite(n)) ? n : null; };
+    var image = function(v){ return (typeof v === 'string' && /^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+\/=]+$/.test(v)) ? v : ''; };
+    var isObj = function(v){ return !!v && typeof v === 'object' && !Array.isArray(v); };
+    var topping = function(t){
+      if(!isObj(t)) return null;
+      var id = str(t.id, 60), name = str(t.name, 60), price = num(t.price);
+      if(!id || !name || price === null || price < 0) return null;
+      return { id: id, name: name, price: roundMoney(price), category: str(t.category, 60) || '' };
+    };
+    if(!isObj(raw) || !Array.isArray(raw.products) || !Array.isArray(raw.orders) || !isObj(raw.settings)){
+      return { ok: false, error: 'ไม่ใช่ไฟล์สำรองข้อมูลของแอปนี้' };
+    }
+    var products = raw.products.map(function(p){
+      if(!isObj(p)) return null;
+      var id = str(p.id, 60), name = str(p.name, 60), price = num(p.price);
+      if(!id || !name || price === null || price < 0) return null;
+      return { id: id, name: name, category: str(p.category, 60) || '', price: roundMoney(price) };
+    });
+    var orders = raw.orders.map(function(o){
+      if(!isObj(o) || !Array.isArray(o.items) || o.items.length === 0) return null;
+      var orderNo = num(o.orderNo), total = num(o.total), date = str(o.date, 10);
+      if(!str(o.id, 60) || orderNo === null || orderNo < 1 || total === null || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+      var items = o.items.map(function(it){
+        if(!isObj(it)) return null;
+        var name = str(it.name, 120), price = num(it.price), qty = num(it.qty);
+        if(!name || price === null || qty === null || qty < 1 || Math.floor(qty) !== qty) return null;
+        var tops = Array.isArray(it.toppings) ? it.toppings.map(topping) : [];
+        if(tops.indexOf(null) !== -1) return null;
+        return { productId: str(it.productId, 60) || '', name: name, price: roundMoney(price), toppings: tops, qty: qty };
+      });
+      if(items.indexOf(null) !== -1) return null;
+      var clean = { id: str(o.id, 60), orderNo: Math.floor(orderNo), date: date, time: str(o.time, 12) || '',
+        items: items, total: roundMoney(total), paymentMethod: o.paymentMethod === 'transfer' ? 'transfer' : 'cash' };
+      var received = num(o.cashReceived), change = num(o.change);
+      if(received !== null && change !== null){ clean.cashReceived = roundMoney(received); clean.change = roundMoney(change); }
+      return clean;
+    });
+    var toppings = Array.isArray(raw.toppings) ? raw.toppings.map(topping) : [];
+    bad.product = products.filter(function(x){ return x === null; }).length;
+    bad.order = orders.filter(function(x){ return x === null; }).length;
+    bad.topping = toppings.filter(function(x){ return x === null; }).length;
+    if(bad.product || bad.order || bad.topping){
+      return { ok: false, error: 'ไฟล์มีข้อมูลผิดรูปแบบ (สินค้า ' + bad.product + ', ออเดอร์ ' + bad.order + ', ท็อปปิ้ง ' + bad.topping + ' รายการ) จึงไม่ได้นำเข้า เพื่อป้องกันข้อมูลเสีย' };
+    }
+    // older backups without category/topping lists: rebuild categories from products instead of keeping this device's lists
+    var categories = Array.isArray(raw.categories)
+      ? raw.categories.map(function(c){ return str(c, 60); }).filter(function(c){ return c; })
+      : products.map(function(p){ return p.category; }).filter(function(c, i, arr){ return c && arr.indexOf(c) === i; });
+    var s = raw.settings;
+    return { ok: true, data: {
+      appVersion: 1,
+      exportedAt: str(raw.exportedAt, 40) || '',
+      products: products,
+      orders: orders,
+      categories: categories.sort(),
+      toppings: toppings,
+      settings: {
+        shopName: str(s.shopName, 60) || 'ร้านคาเฟ่',
+        logo: image(s.logo),
+        brandColor: (typeof s.brandColor === 'string' && /^#[0-9a-f]{6}$/i.test(s.brandColor)) ? s.brandColor : '',
+        staticQrImage: image(s.staticQrImage)
+      }
+    } };
+  }
+  // replaces all current data; the caller confirms with the user first
+  function applyBackup(data){
+    state.products = data.products;
+    state.settings = data.settings;
+    state.orders = data.orders;
+    state.categories = data.categories;
+    state.toppings = data.toppings;
+    persistProducts();
+    persistSettings();
+    var ordersSaved = persistOrders();
+    persistCategories();
+    persistToppings();
+    applyShopBranding();
+    applyTheme();
+    renderPOS();
+    renderProductsView();
+    renderSettingsView();
+    renderBackupStatus();
+    return ordersSaved;
+  }
+
+  document.getElementById('exportBackupBtn').addEventListener('click', function(){
+    var blob = new Blob([JSON.stringify(buildBackup(), null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
@@ -1306,8 +2705,448 @@
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    lsSet(LS_LAST_BACKUP, new Date().toISOString());
+    renderBackupStatus();
     toast('ดาวน์โหลดไฟล์สำรองข้อมูลเรียบร้อย');
   });
+  document.getElementById('backupNowBtn').addEventListener('click', function(){
+    document.getElementById('exportBackupBtn').click();
+  });
+  document.getElementById('backupBannerClose').addEventListener('click', function(){
+    lsSet(LS_BACKUP_SNOOZE, new Date().toISOString());
+    renderBackupStatus();
+    toast('จะเตือนให้สำรองข้อมูลอีกครั้งใน 3 วัน');
+  });
+
+  // ---------- DATA PROTECTION ----------
+  var BACKUP_REMIND_MS = 7 * 24 * 60 * 60 * 1000;
+  var BACKUP_SNOOZE_MS = 3 * 24 * 60 * 60 * 1000; // closing the banner hides it for 3 days
+  var storagePersisted = null; // null = unknown / not supported
+
+  function renderBackupStatus(){
+    var last = lsGet(LS_LAST_BACKUP);
+    var lastDate = last ? new Date(last) : null;
+    var lastLabel = lastDate ? lastDate.toLocaleString('th-TH', {dateStyle:'medium', timeStyle:'short'}) : 'ยังไม่เคยสำรอง';
+    document.getElementById('lastBackupInfo').textContent = 'สำรองข้อมูลล่าสุด: ' + lastLabel;
+    document.getElementById('storagePersistInfo').textContent = storagePersisted === null ? '' :
+      (storagePersisted ? '✔ เบราว์เซอร์จะเก็บข้อมูลไว้ถาวร (ไม่ลบเองเมื่อพื้นที่เต็ม)' : '⚠ เบราว์เซอร์อาจลบข้อมูลเองเมื่อพื้นที่เครื่องเต็ม แนะนำให้ติดตั้งเป็นแอป และสำรองข้อมูลเป็นประจำ');
+
+    var snoozedAt = Date.parse(lsGet(LS_BACKUP_SNOOZE) || '');
+    var snoozed = !isNaN(snoozedAt) && Date.now() - snoozedAt < BACKUP_SNOOZE_MS;
+    var due = state.orders.length > 0 && !snoozed && (!lastDate || Date.now() - lastDate.getTime() > BACKUP_REMIND_MS);
+    document.getElementById('backupBannerText').textContent = lastDate
+      ? '⚠ ไม่ได้สำรองข้อมูลมากกว่า 7 วันแล้ว (ล่าสุด ' + lastLabel + ') หากข้อมูลในเบราว์เซอร์หาย จะกู้คืนไม่ได้'
+      : '⚠ ยังไม่เคยสำรองข้อมูล หากข้อมูลในเบราว์เซอร์หาย จะกู้คืนไม่ได้';
+    document.getElementById('backupBanner').classList.toggle('active', due);
+  }
+
+  function requestPersistentStorage(){
+    if(!navigator.storage || !navigator.storage.persisted) return;
+    navigator.storage.persisted().then(function(already){
+      return already || (navigator.storage.persist ? navigator.storage.persist() : false);
+    }).then(function(granted){
+      storagePersisted = !!granted;
+      renderBackupStatus();
+    }).catch(function(){});
+  }
+
+  // ---------- AUTO SNAPSHOTS (IndexedDB, survives app reloads, not browser data clearing) ----------
+  var SNAP_DB = 'cafe-order-snapshots';
+  var SNAP_STORE = 'snapshots';
+  // Only the latest copy of each kind is kept: one automatic copy (renewed every 3 days, replacing the old one)
+  // and one "before reset / import / restore" copy (each new one replaces the previous).
+  var SNAP_AUTO_ID = 'auto';
+  var SNAP_AUTO_EVERY_MS = 3 * 24 * 60 * 60 * 1000;
+  var SNAP_CHECK_DELAY_MS = 10 * 60 * 1000; // after changes, check at most every 10 minutes whether the 3 days have passed
+  var SNAP_REASONS = {
+    'auto': 'สำรองอัตโนมัติ (ทุก 3 วัน)',
+    'before-reset': 'ก่อนล้างข้อมูลทั้งหมด',
+    'before-import': 'ก่อนนำเข้าข้อมูล',
+    'before-restore': 'ก่อนกู้คืนข้อมูล'
+  };
+  var snapDbPromise = null;
+
+  function openSnapDb(){
+    if(!snapDbPromise){
+      snapDbPromise = new Promise(function(resolve, reject){
+        if(!window.indexedDB){ reject(new Error('no indexedDB')); return; }
+        var req = indexedDB.open(SNAP_DB, 1);
+        req.onupgradeneeded = function(){ req.result.createObjectStore(SNAP_STORE, { keyPath: 'id' }); };
+        req.onsuccess = function(){ resolve(req.result); };
+        req.onerror = function(){ reject(req.error); };
+      });
+      snapDbPromise.catch(function(){ snapDbPromise = null; });
+    }
+    return snapDbPromise;
+  }
+
+  function snapTx(mode, work){
+    return openSnapDb().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(SNAP_STORE, mode);
+        var result = work(tx.objectStore(SNAP_STORE));
+        tx.oncomplete = function(){ resolve(result && 'result' in result ? result.result : undefined); };
+        tx.onerror = function(){ reject(tx.error); };
+        // a full disk aborts the transaction instead of raising an error; without this the promise never settles
+        tx.onabort = function(){ reject(tx.error || new Error('aborted')); };
+      });
+    });
+  }
+
+  function listSnapshots(){
+    return snapTx('readonly', function(store){ return store.getAll(); }).then(function(all){
+      return (all || []).sort(function(a, b){ return b.savedAt.localeCompare(a.savedAt); });
+    });
+  }
+
+  // always resolves: true when the copy is stored, false when it could not be (callers decide what to do)
+  // short content fingerprint (ignores the export time) to recognise copies that hold the same data
+  function dataFingerprint(data){
+    var text = JSON.stringify([data.products, data.settings, data.orders, data.categories, data.toppings]);
+    var h = 5381;
+    for(var i = 0; i < text.length; i++){ h = ((h << 5) + h + text.charCodeAt(i)) | 0; }
+    return text.length + ':' + (h >>> 0).toString(36);
+  }
+  function isEmptyData(data){ return data.orders.length === 0 && data.products.length === 0; }
+
+  // resolves true when the current data is safely kept (newly saved, or already identical to a stored copy),
+  // false when it could not be stored (callers decide what to do)
+  function saveSnapshot(reason){
+    if(!ordersLoaded) return Promise.resolve(false);
+    var data = JSON.parse(JSON.stringify(buildBackup()));
+    // nothing worth keeping: an empty shop needs no "before …" copy
+    if(isEmptyData(data)) return Promise.resolve(true);
+    var fp = dataFingerprint(data);
+    return listSnapshots().then(function(all){
+      // the same data is already stored → nothing new to keep. A "before …" copy only counts the stored
+      // "before …" copy, because the automatic copy is replaced every 3 days.
+      if(all.some(function(s){ return s.fp === fp && (reason === 'auto' || s.reason !== 'auto'); })) return true;
+      var record = {
+        id: reason === 'auto' ? SNAP_AUTO_ID : reason + '-' + Date.now(),
+        reason: reason,
+        savedAt: new Date().toISOString(),
+        orderCount: data.orders.length,
+        productCount: data.products.length,
+        fp: fp,
+        data: data
+      };
+      return snapTx('readwrite', function(store){ store.put(record); })
+        .then(function(){ return pruneSnapshots().catch(function(){}); })
+        .then(function(){ renderSnapshotList(); return true; });
+    }).catch(function(){ return false; });
+  }
+
+  // makes the automatic copy only when there is none yet or the last one is 3+ days old
+  function maybeAutoSnapshot(){
+    if(!ordersLoaded) return Promise.resolve(false);
+    return listSnapshots().then(function(all){
+      var last = all.filter(function(s){ return s.reason === 'auto'; })[0];
+      if(last && Date.now() - Date.parse(last.savedAt) < SNAP_AUTO_EVERY_MS) return false;
+      return saveSnapshot('auto');
+    }).catch(function(){ return false; });
+  }
+
+  // after data changes, check at most every SNAP_CHECK_DELAY_MS (not after every single change)
+  var autoSnapshotTimer = null;
+  function scheduleAutoSnapshot(){
+    if(autoSnapshotTimer) return;
+    autoSnapshotTimer = setTimeout(function(){ autoSnapshotTimer = null; maybeAutoSnapshot(); }, SNAP_CHECK_DELAY_MS);
+  }
+  function flushAutoSnapshot(){
+    if(!autoSnapshotTimer) return;
+    clearTimeout(autoSnapshotTimer);
+    autoSnapshotTimer = null;
+    maybeAutoSnapshot();
+  }
+  // also check every hour for an app that stays open for days, and when it is closed or hidden
+  setInterval(maybeAutoSnapshot, 60 * 60 * 1000);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden') flushAutoSnapshot(); });
+  window.addEventListener('pagehide', flushAutoSnapshot);
+
+  // runs `proceed` after a safety copy is stored; if no copy can be made, asks before going on
+  function withSafetyCopy(reason, actionText, proceed){
+    return saveSnapshot(reason).then(function(ok){
+      if(ok){ proceed(); return; }
+      showChoice('เก็บสำเนาข้อมูลไม่ได้',
+        'เครื่องนี้เก็บสำเนาข้อมูลอัตโนมัติไม่ได้ (อาจเป็นโหมดไม่ระบุตัวตน หรือพื้นที่เต็ม)\nถ้า' + actionText + 'ต่อ ข้อมูลปัจจุบันจะกู้คืนไม่ได้',
+        [
+          { label: 'ดาวน์โหลดไฟล์สำรองก่อน แล้ว' + actionText, onPick: function(){ document.getElementById('exportBackupBtn').click(); proceed(); } },
+          { label: actionText + 'โดยไม่สำรอง', className: 'danger', onPick: proceed },
+          { label: 'ยกเลิก', className: 'secondary' }
+        ]);
+    });
+  }
+
+  // keeps only the newest automatic copy and the newest non-empty "before …" copy; everything older is deleted
+  // (this also clears the per-day copies and duplicates kept by earlier versions)
+  function pruneSnapshots(){
+    return listSnapshots().then(function(all){
+      var keptAuto = null, keptOther = null;
+      var drop = all.filter(function(s){   // `all` is newest first
+        if(s.reason === 'auto'){
+          if(keptAuto) return true;
+          keptAuto = s; return false;
+        }
+        if(keptOther || !s.data || isEmptyData(s.data)) return true;
+        keptOther = s; return false;
+      });
+      if(drop.length === 0) return;
+      return snapTx('readwrite', function(store){ drop.forEach(function(s){ store.delete(s.id); }); });
+    });
+  }
+
+  function renderSnapshotList(){
+    var wrap = document.getElementById('snapshotList');
+    listSnapshots().then(function(all){
+      if(all.length === 0){
+        wrap.innerHTML = '<div class="empty" style="padding:6px 0;">ยังไม่มีสำเนา ระบบจะเริ่มเก็บเมื่อมีการขายหรือแก้ไขข้อมูล</div>';
+        return;
+      }
+      wrap.innerHTML = '';
+      var lastAuto = all.filter(function(s){ return s.reason === 'auto'; })[0];
+      if(lastAuto){
+        var next = new Date(Date.parse(lastAuto.savedAt) + SNAP_AUTO_EVERY_MS);
+        var nextLine = document.createElement('p');
+        nextLine.className = 'info-line';
+        nextLine.style.margin = '0 0 8px';
+        nextLine.textContent = 'สำรองอัตโนมัติครั้งถัดไป: ' + (next <= new Date() ? 'เมื่อมีการขายหรือแก้ไขข้อมูลครั้งถัดไป' : next.toLocaleDateString('th-TH', {dateStyle:'medium'}));
+        wrap.appendChild(nextLine);
+      }
+      all.forEach(function(s){
+        var row = document.createElement('div');
+        row.className = 'snap-row';
+        var when = new Date(s.savedAt).toLocaleString('th-TH', {dateStyle:'medium', timeStyle:'short'});
+        row.innerHTML = '<div><span></span><small></small></div><button type="button" class="btn secondary" style="padding:6px 14px;">กู้คืน</button>';
+        row.querySelector('span').textContent = when;
+        row.querySelector('small').textContent = (SNAP_REASONS[s.reason] || s.reason) + ' · ' + s.orderCount + ' ออเดอร์ · ' + s.productCount + ' สินค้า';
+        row.querySelector('button').addEventListener('click', function(){ restoreSnapshot(s.id); });
+        wrap.appendChild(row);
+      });
+    }).catch(function(){
+      wrap.innerHTML = '<div class="empty" style="padding:6px 0;">' + (storageOk
+        ? 'เครื่องนี้เก็บสำเนาในเครื่องไม่ได้ (อาจเป็นโหมดไม่ระบุตัวตน หรือพื้นที่เต็ม) แนะนำให้เชื่อมต่อ Google Drive หรือดาวน์โหลดไฟล์สำรองแทน'
+        : 'เก็บสำเนาไม่ได้ เพราะหน้านี้บันทึกข้อมูลไม่ได้ (ดูกล่องสีแดงด้านบน)') + '</div>';
+    });
+  }
+
+  function restoreSnapshot(id){
+    snapTx('readonly', function(store){ return store.get(id); }).then(function(s){
+      if(!s){ toast('ไม่พบสำเนานี้'); return; }
+      var checked = sanitizeBackup(s.data);
+      if(!checked.ok){ toast('สำเนานี้ใช้ไม่ได้: ' + checked.error); return; }
+      var when = new Date(s.savedAt).toLocaleString('th-TH', {dateStyle:'medium', timeStyle:'short'});
+      if(!confirm('กู้คืนข้อมูลเป็นสำเนาเมื่อ ' + when + ' (' + s.orderCount + ' ออเดอร์) หรือไม่?\nข้อมูลปัจจุบันจะถูกเก็บเป็นสำเนา "ก่อนกู้คืนข้อมูล" ไว้ก่อน')) return;
+      return withSafetyCopy('before-restore', 'กู้คืน', function(){
+        applyBackup(checked.data).then(function(saved){
+          if(saved) toast('กู้คืนข้อมูลเมื่อ ' + when + ' เรียบร้อย');
+        });
+      });
+    }).catch(function(){ toast('อ่านสำเนาไม่สำเร็จ'); });
+  }
+
+  // ---------- CLOUD BACKUP (Google Apps Script web app in the shop's own Google account) ----------
+  var CLOUD_URL_RE = /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/;
+  var CLOUD_TIMEOUT_MS = 30000;
+  var cloudBusy = false;
+
+  var CLOUD_EVERY_MS = 30 * 60 * 1000; // upload changes at most every 30 minutes (each upload sends the whole shop data)
+  var CLOUD_RETRY_MS = 5 * 60 * 1000;  // after a failed upload, try again sooner
+  function loadCloud(){ return loadJSON(LS_CLOUD, { url: '', lastOk: '', lastError: '', pending: false, lastAttempt: '' }); }
+  function saveCloud(c){ try{ localStorage.setItem(LS_CLOUD, JSON.stringify(c)); }catch(e){} }
+
+  function onDataChanged(){
+    scheduleAutoSnapshot();
+    var c = loadCloud();
+    if(!c.url) return;
+    // only mark it; the upload happens at most every CLOUD_EVERY_MS, or when the app is closed / hidden
+    c.pending = true;
+    c.changedAt = new Date().toISOString();
+    saveCloud(c);
+    if(!cloudBusy) renderCloudStatus();
+  }
+
+  // pending changes are uploaded once CLOUD_EVERY_MS has passed since the last attempt (5 minutes after a failure)
+  function cloudWaitMs(c){ return c.lastError ? CLOUD_RETRY_MS : CLOUD_EVERY_MS; }
+  function cloudDue(c){
+    var last = Date.parse(c.lastAttempt || '');
+    return !!c.url && c.pending && (isNaN(last) || Date.now() - last >= cloudWaitMs(c));
+  }
+
+  function cloudRequest(url, action, data){
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, CLOUD_TIMEOUT_MS);
+    // text/plain keeps this a "simple" request, so Apps Script can answer without a CORS preflight
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: action, date: todayStr(), data: data }),
+      signal: ctrl ? ctrl.signal : undefined
+    }).then(function(res){
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function(json){
+      if(!json || !json.ok) throw new Error((json && json.error) || 'ไม่ได้รับคำตอบที่ถูกต้อง');
+      return json;
+    }).catch(function(err){
+      if(err && err.name === 'AbortError') throw new Error('หมดเวลาเชื่อมต่อ');
+      if(err instanceof TypeError) throw new Error('เชื่อมต่อไม่ได้ (ตรวจอินเทอร์เน็ต หรือ URL/การตั้งค่า "ทุกคน" ในขั้นตอนที่ 6)');
+      throw err;
+    }).finally(function(){ clearTimeout(timer); });
+  }
+
+  function syncToCloud(manual){
+    var c = loadCloud();
+    if(!c.url || cloudBusy || !ordersLoaded) return Promise.resolve(false);
+    if(!navigator.onLine){
+      c.pending = true; saveCloud(c); renderCloudStatus();
+      if(manual) toast('ไม่มีอินเทอร์เน็ต จะสำรองให้เองเมื่อกลับมาออนไลน์');
+      return Promise.resolve(false);
+    }
+    cloudBusy = true;
+    var startedAt = new Date().toISOString();
+    c.lastAttempt = startedAt; saveCloud(c);
+    renderCloudStatus('กำลังสำรองขึ้น Google Drive…');
+    return cloudRequest(c.url, 'backup', buildBackup()).then(function(){
+      var now = new Date().toISOString();
+      c = loadCloud(); c.lastOk = now; c.lastError = '';
+      // a change made while uploading is not in this upload, so it stays pending
+      c.pending = !!c.changedAt && c.changedAt > startedAt;
+      saveCloud(c);
+      lsSet(LS_LAST_BACKUP, now);
+      renderBackupStatus();
+      if(manual) toast('สำรองขึ้น Google Drive เรียบร้อย');
+      return true;
+    }).catch(function(err){
+      c = loadCloud(); c.lastError = err.message; c.pending = true; saveCloud(c);
+      if(manual) toast('สำรองไม่สำเร็จ: ' + err.message);
+      return false;
+    }).then(function(ok){
+      cloudBusy = false;
+      renderCloudStatus();
+      return ok;
+    });
+  }
+
+  function renderCloudStatus(busyText){
+    var c = loadCloud();
+    var el = document.getElementById('cloudStatus');
+    var connected = !!c.url;
+    var fmt = function(iso){ return new Date(iso).toLocaleString('th-TH', {dateStyle:'medium', timeStyle:'short'}); };
+    el.className = 'cloud-status';
+    if(busyText){ el.textContent = '⏳ ' + busyText; }
+    else if(!connected){ el.textContent = 'ยังไม่ได้เชื่อมต่อ ทำตามขั้นตอนด้านล่างครั้งเดียว แล้ววาง URL ในช่องนี้'; }
+    else if(c.lastError){ el.classList.add('error'); el.textContent = '⚠ สำรองครั้งล่าสุดไม่สำเร็จ: ' + c.lastError + ' (ระบบจะลองใหม่อัตโนมัติ)'; }
+    else if(c.pending){
+      var lastTry = Date.parse(c.lastAttempt || '');
+      var nextAt = isNaN(lastTry) ? new Date() : new Date(Math.max(Date.now(), lastTry + cloudWaitMs(c)));
+      el.classList.add('warn');
+      el.textContent = '⏳ มีข้อมูลรอส่ง จะสำรองให้เองประมาณ ' + nextAt.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}) +
+        ' น. หรือเมื่อปิด/สลับออกจากแอป' + (c.lastOk ? ' · สำเร็จล่าสุด ' + fmt(c.lastOk) : '');
+    }
+    else if(c.lastOk){ el.classList.add('ok'); el.textContent = '✔ เชื่อมต่อแล้ว · สำรองล่าสุด ' + fmt(c.lastOk); }
+    else { el.classList.add('ok'); el.textContent = '✔ เชื่อมต่อแล้ว'; }
+    var urlInput = document.getElementById('cloudUrl');
+    if(document.activeElement !== urlInput) urlInput.value = c.url;
+    urlInput.readOnly = connected;
+    document.getElementById('cloudConnectBtn').style.display = connected ? 'none' : '';
+    ['cloudSyncNowBtn', 'cloudRestoreBtn', 'cloudDisconnectBtn'].forEach(function(id){
+      document.getElementById(id).style.display = connected ? '' : 'none';
+    });
+    document.getElementById('cloudHelp').open = !connected;
+  }
+
+  document.getElementById('cloudConnectBtn').addEventListener('click', function(){
+    var url = document.getElementById('cloudUrl').value.trim();
+    clearFieldErrors('#cloudCard');
+    if(!CLOUD_URL_RE.test(url)){
+      setFieldError('cloudUrlField', 'URL ต้องขึ้นต้นด้วย https://script.google.com/macros/s/ และลงท้ายด้วย /exec (ดูขั้นตอนที่ 8)');
+      document.getElementById('cloudUrl').focus();
+      return;
+    }
+    var btn = this;
+    btn.disabled = true;
+    renderCloudStatus('กำลังทดสอบการเชื่อมต่อ…');
+    var connectAndUpload = function(){
+      saveCloud({ url: url, lastOk: '', lastError: '', pending: true });
+      toast('เชื่อมต่อ Google Drive สำเร็จ กำลังสำรองข้อมูลครั้งแรก');
+      return syncToCloud(false);
+    };
+    cloudRequest(url, 'ping').then(function(){
+      // look at what Drive already holds before the first upload, so a new device can't wipe it
+      return cloudRequest(url, 'latest').catch(function(err){
+        if(/ยังไม่มีข้อมูลสำรอง/.test(err.message)) return null;
+        throw err;
+      });
+    }).then(function(existing){
+      var remote = existing ? sanitizeBackup(existing.data) : null;
+      if(!remote || !remote.ok || remote.data.orders.length === 0) return connectAndUpload();
+      var when = remote.data.exportedAt ? new Date(remote.data.exportedAt).toLocaleString('th-TH', {dateStyle:'medium', timeStyle:'short'}) : '-';
+      renderCloudStatus();
+      showChoice('พบข้อมูลใน Google Drive',
+        'Drive มีข้อมูลสำรองเมื่อ ' + when + ' (' + remote.data.orders.length + ' ออเดอร์, ' + remote.data.products.length + ' สินค้า)\nเครื่องนี้มี ' + state.orders.length + ' ออเดอร์\nต้องการใช้ข้อมูลชุดไหน?',
+        [
+          { label: 'ดึงข้อมูลจาก Drive มาใช้ในเครื่องนี้', onPick: function(){
+            saveCloud({ url: url, lastOk: '', lastError: '', pending: false });
+            renderCloudStatus();
+            withSafetyCopy('before-restore', 'ดึงข้อมูล', function(){
+              applyBackup(remote.data).then(function(saved){
+                if(saved) toast('เชื่อมต่อและดึงข้อมูลจาก Google Drive เรียบร้อย');
+              });
+            });
+          } },
+          { label: 'ใช้ข้อมูลในเครื่องนี้ แล้วสำรองทับบน Drive', className: 'danger', onPick: connectAndUpload },
+          { label: 'ยกเลิก (ยังไม่เชื่อมต่อ)', className: 'secondary' }
+        ]);
+    }).catch(function(err){
+      renderCloudStatus();
+      setFieldError('cloudUrlField', 'เชื่อมต่อไม่สำเร็จ: ' + err.message);
+    }).then(function(){ btn.disabled = false; });
+  });
+  document.getElementById('cloudUrl').addEventListener('input', function(){ this.closest('.field').classList.remove('invalid'); });
+  document.getElementById('cloudSyncNowBtn').addEventListener('click', function(){ syncToCloud(true); });
+  document.getElementById('cloudDisconnectBtn').addEventListener('click', function(){
+    if(!confirm('ยกเลิกการเชื่อมต่อ Google Drive หรือไม่?\n(ไฟล์ที่สำรองไว้ใน Drive ยังอยู่ครบ เชื่อมต่อใหม่ด้วย URL เดิมได้)')) return;
+    saveCloud({ url: '', lastOk: '', lastError: '', pending: false });
+    renderCloudStatus();
+    toast('ยกเลิกการเชื่อมต่อแล้ว');
+  });
+  document.getElementById('cloudRestoreBtn').addEventListener('click', function(){
+    var c = loadCloud();
+    if(!c.url) return;
+    renderCloudStatus('กำลังดึงข้อมูลจาก Google Drive…');
+    cloudRequest(c.url, 'latest').then(function(json){
+      renderCloudStatus();
+      var checked = sanitizeBackup(json.data);
+      if(!checked.ok){ toast('ข้อมูลใน Google Drive ใช้ไม่ได้: ' + checked.error); return; }
+      var when = checked.data.exportedAt ? new Date(checked.data.exportedAt).toLocaleString('th-TH', {dateStyle:'medium', timeStyle:'short'}) : '-';
+      if(!confirm('ดึงข้อมูลจาก Google Drive (สำรองเมื่อ ' + when + ', ' + checked.data.orders.length + ' ออเดอร์) มาแทนข้อมูลในเครื่องนี้หรือไม่?\nข้อมูลปัจจุบันจะถูกเก็บเป็นสำเนา "ก่อนกู้คืนข้อมูล" ไว้ก่อน')) return;
+      return withSafetyCopy('before-restore', 'ดึงข้อมูล', function(){
+        applyBackup(checked.data).then(function(saved){
+          if(saved) toast('ดึงข้อมูลจาก Google Drive เรียบร้อย');
+        });
+      });
+    }).catch(function(err){
+      renderCloudStatus();
+      toast('ดึงข้อมูลไม่สำเร็จ: ' + err.message);
+    });
+  });
+  document.getElementById('copyCloudScriptBtn').addEventListener('click', function(){
+    var box = document.getElementById('cloudScriptBox');
+    var done = function(){ toast('คัดลอกโค้ดแล้ว นำไปวางใน Apps Script ได้เลย'); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(box.value).then(done, function(){ box.select(); document.execCommand('copy'); done(); });
+    } else { box.select(); document.execCommand('copy'); done(); }
+  });
+  document.getElementById('cloudScriptBox').value = document.getElementById('cloudScriptSource').textContent.trim();
+
+  // upload pending changes every 30 minutes at most (checked each minute), when the connection returns,
+  // and right away when the app is closed or the user switches away from it
+  setInterval(function(){ if(cloudDue(loadCloud())) syncToCloud(false); }, 60 * 1000);
+  window.addEventListener('online', function(){ if(cloudDue(loadCloud())) syncToCloud(false); });
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'hidden' && loadCloud().pending) syncToCloud(false);
+  });
+  window.addEventListener('pagehide', function(){ if(loadCloud().pending) syncToCloud(false); });
 
   document.getElementById('importBackupBtn').addEventListener('click', function(){
     document.getElementById('importBackupInput').click();
@@ -1322,27 +3161,17 @@
       var data;
       try{ data = JSON.parse(ev.target.result); }
       catch(err){ toast('ไม่สามารถอ่านไฟล์นี้ได้ (ไม่ใช่ไฟล์ JSON ที่ถูกต้อง)'); return; }
-      if(!data || !Array.isArray(data.products) || !Array.isArray(data.orders) || typeof data.settings !== 'object'){
-        toast('ไฟล์สำรองข้อมูลไม่ถูกต้อง');
+      var checked = sanitizeBackup(data);
+      if(!checked.ok){
+        alert('นำเข้าไม่ได้: ' + checked.error);
         return;
       }
-      if(!confirm('การนำเข้าข้อมูลจะเขียนทับข้อมูลปัจจุบันทั้งหมด (สินค้า, ออเดอร์, การตั้งค่า) ต้องการดำเนินการต่อหรือไม่?')) return;
-      state.products = data.products;
-      state.settings = data.settings;
-      state.orders = data.orders;
-      state.categories = Array.isArray(data.categories) ? data.categories : state.categories;
-      state.toppings = Array.isArray(data.toppings) ? data.toppings : state.toppings;
-      persistProducts();
-      persistSettings();
-      persistOrders();
-      persistCategories();
-      persistToppings();
-      applyShopBranding();
-      applyTheme();
-      renderPOS();
-      renderProductsView();
-      renderSettingsView();
-      toast('นำเข้าข้อมูลสำเร็จ');
+      if(!confirm('การนำเข้าข้อมูลจะเขียนทับข้อมูลปัจจุบันทั้งหมด (' + checked.data.products.length + ' สินค้า, ' + checked.data.orders.length + ' ออเดอร์) ต้องการดำเนินการต่อหรือไม่?\n(ระบบจะเก็บสำเนาข้อมูลปัจจุบันไว้ในรายการสำรองอัตโนมัติก่อน)')) return;
+      withSafetyCopy('before-import', 'นำเข้า', function(){
+        applyBackup(checked.data).then(function(saved){
+          if(saved) toast('นำเข้าข้อมูลสำเร็จ');
+        });
+      });
     };
     reader.readAsText(file);
   });
@@ -1356,11 +3185,11 @@
   // ---------- seed sample data on first run ----------
   if(state.products.length === 0){
     state.products = [
-      { id: uid(), name: 'อเมริกาโน่', category: 'เครื่องดื่ม', price: 45, dailyLimit: 0 },
-      { id: uid(), name: 'ลาเต้', category: 'เครื่องดื่ม', price: 55, dailyLimit: 0 },
-      { id: uid(), name: 'คาปูชิโน่', category: 'เครื่องดื่ม', price: 55, dailyLimit: 0 },
-      { id: uid(), name: 'ชาไทย', category: 'เครื่องดื่ม', price: 45, dailyLimit: 20 },
-      { id: uid(), name: 'เค้กช็อกโกแลต', category: 'ขนม', price: 65, dailyLimit: 10 }
+      { id: uid(), name: 'อเมริกาโน่', category: 'เครื่องดื่ม', price: 45 },
+      { id: uid(), name: 'ลาเต้', category: 'เครื่องดื่ม', price: 55 },
+      { id: uid(), name: 'คาปูชิโน่', category: 'เครื่องดื่ม', price: 55 },
+      { id: uid(), name: 'ชาไทย', category: 'เครื่องดื่ม', price: 45 },
+      { id: uid(), name: 'เค้กช็อกโกแลต', category: 'ขนม', price: 65 }
     ];
     persistProducts();
   }
@@ -1376,9 +3205,47 @@
   }
 
   setHeaderDate();
+  // keep the header date correct when the app stays open past midnight
+  var shownDate = todayStr();
+  setInterval(function(){
+    if(todayStr() === shownDate) return;
+    var previous = shownDate;
+    shownDate = todayStr();
+    setHeaderDate();
+    // move the summary date / export month forward only if they were still showing "today" / "this month";
+    // a date the user picked on purpose stays as it is
+    var summaryDate = document.getElementById('summaryDate');
+    var exportMonth = document.getElementById('exportMonth');
+    if(summaryDate.value === previous) summaryDate.value = shownDate;
+    if(exportMonth.value === previous.slice(0, 7)) exportMonth.value = shownDate.slice(0, 7);
+    renderPOS();
+    renderBackupStatus();
+    if(document.getElementById('view-summary').classList.contains('active')) renderSummaryView();
+  }, 60000);
   applyShopBranding();
   applyTheme();
   renderPOS();
+  if(!storageOk){
+    document.getElementById('storageBanner').classList.add('active');
+    document.getElementById('storageBannerText').textContent =
+      (/^(file|data):$/.test(location.protocol)
+        ? 'เปิดไฟล์ index.html โดยตรงจากเครื่อง เบราว์เซอร์จึงไม่ยอมให้เก็บข้อมูล'
+        : 'เบราว์เซอร์ปิดการเก็บข้อมูลของหน้านี้ (อาจเป็นโหมดไม่ระบุตัวตน)') +
+      ' ออเดอร์ สินค้า และการตั้งค่าจะไม่ถูกบันทึก และจะหายเมื่อปิดหน้า' +
+      ' — กรุณาเปิดผ่านลิงก์เว็บของร้าน (https://…) หรือแอปที่ติดตั้งไว้ (ถ้าทดสอบในคอม ให้เปิดผ่าน http://localhost)';
+  }
+  requestPersistentStorage();
+  // orders live in IndexedDB (much more room than localStorage, especially on iPhone), so load them first
+  loadOrders().then(function(orders){
+    state.orders = orders;
+    ordersLoaded = true;
+    renderPOS();
+    renderBackupStatus();
+    if(document.getElementById('view-summary').classList.contains('active')) renderSummaryView();
+    // make sure today has a snapshot, and send anything left over from last time
+    pruneSnapshots().catch(function(){}).then(maybeAutoSnapshot).then(renderSnapshotList);
+    if(loadCloud().pending) setTimeout(function(){ syncToCloud(false); }, 3000);
+  });
 
   if('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')){
     window.addEventListener('load', function(){
